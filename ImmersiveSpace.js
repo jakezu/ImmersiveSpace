@@ -15,7 +15,7 @@ if (isServer())
 	engine.IncludeFile("server.js");
 
 // clients part
-else
+else if (isClient())
 {
 	// regular expression pattern for matching client name
 	var regexp = /client[2-6]/;
