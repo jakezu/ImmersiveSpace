@@ -1,6 +1,6 @@
 realXtend based immersive space script.
 
-This script is used to create the immersive space of six invidual clients.
+This script is used to create the immersive space of six invidual client machines.
 ScriptImporter jsmodule is needed to import this file into the existing scene.
 
 To test:
