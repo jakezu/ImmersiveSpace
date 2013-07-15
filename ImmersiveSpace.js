@@ -11,19 +11,26 @@ engine.IncludeFile("helpers.js");
 var masterclient = "client1";
 
 // server side part
-if (server.IsRunning())
-{
-	//console.LogInfo("server!");
+if (isServer())
 	engine.IncludeFile("server.js");
-}
 
 // clients part
 else
 {
-	//console.LogInfo("client!");
-	if (client.LoginProperty("username") == masterclient) 
+	// regular expression pattern for matching client name
+	var regexp = /client[2-6]/;
+	
+	var username = client.LoginProperty("username");
+	
+	// match for the masterclient
+	if (username == masterclient) 
 		engine.IncludeFile("masterclient.js");
-	else
+	
+	// match for the slaveclients
+	else if (username.match(regexp))
 		engine.IncludeFile("slaveclients.js");
+	
+	else
+		console.LogError("Username invalid!");
 }
 
