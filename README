@@ -20,15 +20,13 @@ This client is responsible for the input commands (scene's moving and rotating c
 - no need to enable ScriptImporter jsmodule
 - make local directory for the assets (for example c:\data\assets\)
 - connect to the Tundra server: 
-    tundra --login tundra://192.168.1.10:2345/?username=client1 
-     --storage "src=http://192.168.1.10/DemoScene/;localdir=c:\data\assets\;name=web"
+    tundra --login tundra://192.168.1.10:2345/?username=client1 --storage "src=http://192.168.1.10/DemoScene/;localdir=c:\data\assets\;name=web"
 
 Other clients:
 These clients just connects to the server and get's their camera offsets and other control messages from the server.
 - no need to enable ScriptImporter jsmodule
 - make local directory for the assets (for example c:\data\assets\)
 - connect to the Tundra server: 
-    tundra --login tundra://192.168.1.10:2345/?username=<clientID> 
-     --storage "src=http://192.168.1.10/DemoScene/;localdir=c:\data\assets\;name=web"
+    tundra --login tundra://192.168.1.10:2345/?username=<clientID> --storage "src=http://192.168.1.10/DemoScene/;localdir=c:\data\assets\;name=web"
 
 
