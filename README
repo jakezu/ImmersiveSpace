@@ -17,6 +17,7 @@ In this example server's ip-address is "192.168.1.10", port is "2345", scene fil
 
 Master client:
 This client is responsible for the input commands (scene's moving and rotating commands) and sending other control messages to the clients via server. Plug input devices (e.g. keyboard and mouse) to this computer.
+Valid username for the master client is "client1".
 - no need to enable ScriptImporter jsmodule
 - make local directory for the assets (for example c:\data\assets\)
 - connect to the Tundra server: 
@@ -24,6 +25,7 @@ This client is responsible for the input commands (scene's moving and rotating c
 
 Other clients:
 These clients just connects to the server and get's their camera offsets and other control messages from the server.
+Valid username for the slave clients are "client2" ... "client6".
 - no need to enable ScriptImporter jsmodule
 - make local directory for the assets (for example c:\data\assets\)
 - connect to the Tundra server: 
