@@ -36,7 +36,7 @@ var Server = Class.extend
 	createVoidEntity: function()
 	{
 		voidentity = scene.CreateEntity(scene.NextFreeId(), /* NextFreeId() for replicated */
-						["EC_Placeable", "EC_Camera"],					/* Components */
+						["EC_Placeable", "EC_Camera"],		/* Components */
 						'',									/* AttributeChange enum, 2 for LocalOnly, 3 for replicated. */
 						replicated=true, 					/* Replicate entity to server and other clients */
 						componentsReplicated=true);			/* Replicate components to server and other clients */
