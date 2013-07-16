@@ -9,22 +9,25 @@ Server:
 Server is responsible for the hosting scene to the clients and for the creating the entity which serves offsets to the clients' cameras.
 In this example server's ip-address is "192.168.1.10", port is "2345", scene file is "scene.txml" and Apache HTTP Server is used to share scene directory (<DocumentRoot>/DemoScene/) to the clients.
 - make scene directory available for the client machines 
-    * edit Apache httpd.conf file: <Directory "<DocumentRoot>/DemoScene"> Options.... </Directory>
+    * edit Apache httpd.conf file: 
+      <Directory "<DocumentRoot>/DemoScene"> 
+         Options.... 
+      </Directory>
 - enable ScriptImporter: open plugins.xml for editing and add <jsplugin path="ScriptImporter/ScriptImporter.js" />
 - start Tundra server: tundra --server --file scene.txml
 - drag and drop ImmersiveSpace.js file into the tundra window
-- delete, if needed, unnecessary entities and components from the scene, for example FreeLookCamera
+- delete, if needed, unnecessary entities and components from the scene. FreeLookCamera entity has been automatically removed from the scene by this script
 
 Master client:
-This client is responsible for the input commands (scene's moving and rotating commands) and sending other control messages to the clients via server. Plug input devices (e.g. keyboard and mouse) to this computer.
+This client is responsible for the input commands (camera moving and rotating), and sending other control messages to the server and the slave clients. Plug input devices (e.g. keyboard and mouse) to this computer.
 Valid username for the master client is "client1".
 - no need to enable ScriptImporter jsmodule
 - make local directory for the assets (for example c:\data\assets\)
 - connect to the Tundra server: 
     tundra --login tundra://192.168.1.10:2345/?username=client1 --storage "src=http://192.168.1.10/DemoScene/;localdir=c:\data\assets\;name=web"
 
-Other clients:
-These clients just connects to the server and get's their camera offsets and other control messages from the server.
+Slave clients:
+These clients just connects to the server and get's their camera offsets and other control messages from the server and Master client.
 Valid username for the slave clients are "client2" ... "client6".
 - no need to enable ScriptImporter jsmodule
 - make local directory for the assets (for example c:\data\assets\)
