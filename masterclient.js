@@ -8,34 +8,51 @@ var MasterClient = Class.extend
     {
 
         this.data = {};
-
+		
         Log("**** Creating master client objects");
 
-        // Create MasterClient-entity which gives placeable data for the clients
-        this.createMasterClientEntity();
+        this.createMasterClient();
+		this.setMasterCamera();
         
-        // Remove FreeLookCamera from the scene
         this.removeFreeLookCamera();
     },
-	
-	createMasterClientEntity: function()
-	{
-		mastercliententity = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
 
-		mastercliententity.SetName("MasterClient");
-		mastercliententity.SetTemporary(true);
-		mastercliententity.camera.SetActive();
+	// Create MasterClient-entity which gives placeable data for the clients
+	createMasterClient: function()
+	{
+		masterclient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
+
+		masterclient.SetName("MasterClient");
+		masterclient.SetTemporary(true);
+		var placeable = masterclient.placeable;
+		var voidentity = scene.GetEntityByName("Void");
+		
+		// set parenting reference to the Server's Void-entity
+		placeable.SetParent(voidentity, preserveWorldTransform=false);
+		
 		Log("**** MasterClient entity has been created with placeable, camera and name components");
 	},
+
+	// Set MasterCamera parameters
+	setMasterCamera: function()
+	{
+		var mastercamera = masterclient.camera;
+		
+		// Field of vision (45 = default, 38.5 is good in one particular setup)
+		mastercamera.verticalFov = 38.5;
+		
+		mastercamera.SetActive();
+
+	},
 	
+	// Remove FreeLookCamera from the scene
 	removeFreeLookCamera: function()
 	{
 		var freelookcamera = scene.GetEntityByName("FreeLookCamera");
 		
 		if (freelookcamera)
 		{
-			freelookcameraID = freelookcamera.Id();
-			scene.RemoveEntity(freelookcameraID,'');
+			scene.RemoveEntity(freelookcamera.id,'');
 			Log("**** FreeLookCamera entity removed");
 		}
 	}
