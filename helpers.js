@@ -1,5 +1,5 @@
 // Define the basic log channel name if the using code wont be defining one.
-var _TUTORIAL_LOGCHANNEL = "ImmersiveSpace_demo";
+var _TUTORIAL_LOGCHANNEL = "ImmersiveSpace";
  
 // Helper function to tell us if we are running the script on a client instance.
 // In our case a client is a non-server and non-headless Tundra. Non-headless means we have the main UI window.
