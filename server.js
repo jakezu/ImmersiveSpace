@@ -22,12 +22,12 @@ var Server = Class.extend
 ({
     init: function()
     {
-        if (me.name != _applicationName)
-            me.name = _applicationName;
- 
-        this.data = {};
- 
-        Log("**** Creating server objects");
+      if (me.name != _applicationName)
+          me.name = _applicationName;
+
+      this.data = {};
+
+      Log("**** Creating server objects");
  
 		this.createVoidEntity();
 		this.removeFreeLookCamera();
@@ -36,10 +36,10 @@ var Server = Class.extend
 	createVoidEntity: function()
 	{
 		voidentity = scene.CreateEntity(scene.NextFreeId(), /* NextFreeId() for replicated */
-						["EC_Placeable", "EC_Camera"],		/* Components */
-						'',									/* AttributeChange enum, 2 for LocalOnly, 3 for replicated. */
-						replicated=true, 					/* Replicate entity to server and other clients */
-						componentsReplicated=true);			/* Replicate components to server and other clients */
+						["EC_Placeable", "EC_Camera"],		          /* Components */
+						'',									                        /* AttributeChange enum, 2 for LocalOnly, 3 for replicated. */
+						replicated=true, 					                  /* Replicate entity to server and other clients */
+						componentsReplicated=true);			            /* Replicate components to server and other clients */
 
 		voidentity.SetName("Void");
 		voidentity.SetTemporary(true);
