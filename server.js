@@ -1,7 +1,7 @@
 engine.IncludeFile("local://class.js"); // from jsmodules/lib
 
 var _p = null;
-var _applicationName = "ServerApplication";
+var _applicationName = "ImmersiveSpaceApplication";
 
 var Server = Class.extend
 ({
@@ -14,7 +14,10 @@ var Server = Class.extend
 
         Log("**** Creating server objects");
 
+        // Create Void-entity which gives placeable data for the clients
         this.createVoidEntity();
+        
+        // Remove FreeLookCamera from the scene
         this.removeFreeLookCamera();
     },
 	
