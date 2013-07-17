@@ -5,19 +5,19 @@ var voidentity = scene.GetEntityByName("Void");
 
 var MasterClient = Class.extend
 ({
-    init: function()
-    {
+	init: function()
+	{
 
-        this.data = {};
+		this.data = {};
 		
-        Log("**** Creating master client objects");
+		Log("**** Creating master client objects");
 
-        this.createMasterClient();
+		this.createMasterClient();
 		this.setMasterCamera();
 		this.setSpawnPoint();
-        
-        this.removeFreeLookCamera();
-    },
+
+		this.removeFreeLookCamera();
+	},
 
 	// Create MasterClient-entity which gives placeable data for the clients
 	createMasterClient: function()
