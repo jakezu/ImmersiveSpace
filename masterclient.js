@@ -1,13 +1,35 @@
 engine.IncludeFile("local://class.js"); // from jsmodules/lib
+engine.ImportExtension("qt.core");
+engine.ImportExtension("qt.gui");
+engine.ImportExtension("qt.webkit");
 
 var _p = null;
 var voidentity = scene.GetEntityByName("Void");
+
+var _g =
+{
+    connected : false,
+    rotate :
+    {
+        sensitivity : 0.3
+    },
+    move :
+    {
+        sensitivity : 30.0,
+        amount : new float3(0,0,0)
+    },
+    motion : new float3(0,0,0),
+};
+
 
 var MasterClient = Class.extend
 ({
 	init: function()
 	{
 
+		// Connect frame updates and enabled inputmapper
+        frame.Updated.connect(this, this.Update);
+		
 		this.data = {};
 		
 		Log("**** Creating master client objects");
@@ -15,8 +37,37 @@ var MasterClient = Class.extend
 		this.createMasterClient();
 		this.setMasterCamera();
 		this.setSpawnPoint();
+		this.createInputHandler();
 
 		this.removeFreeLookCamera();
+	},
+	
+	Update: function(frametime)
+	{
+		profiler.BeginBlock("FreeLookCamera_Update");
+		/*
+		if (!IsCameraActive())
+		{
+			profiler.EndBlock();
+			return;
+		}
+		*/
+
+		if (_g.move.amount.x == 0 && _g.move.amount.y == 0 && _g.move.amount.z == 0)
+		{
+			profiler.EndBlock();
+			return;
+		}
+
+		_g.motion.x = _g.move.amount.x * _g.move.sensitivity * frametime;
+		_g.motion.y = _g.move.amount.y * _g.move.sensitivity * frametime;
+		_g.motion.z = _g.move.amount.z * _g.move.sensitivity * frametime;
+		
+		var me = voidentity;
+		_g.motion = me.placeable.Orientation().Mul(_g.motion);
+		me.placeable.SetPosition(me.placeable.Position().Add(_g.motion));
+
+		profiler.EndBlock();
 	},
 
 	// Create MasterClient-entity which gives placeable data for the clients
@@ -42,10 +93,9 @@ var MasterClient = Class.extend
 		
 		// Field of vision (45 = default, 38.5 is good in one particular setup)
 		mastercamera.verticalFov = 38.5;
-		
 		mastercamera.SetActive();
-
 	},
+	
 	// Set initial spawn point
 	setSpawnPoint: function()
 	{
@@ -54,7 +104,90 @@ var MasterClient = Class.extend
 		void_transform.pos = new float3(0, 20, 0);
 		voidentity.placeable.transform = void_transform;
 	},
+	
+	// Create handler for keyboard and mouse events
+	createInputHandler: function()
+	{
+		var inputContext = input.RegisterInputContextRaw("FreeLookCamera", 101);
+		inputContext.takeMouseEventsOverQt = true;
+		inputContext.KeyPressed.connect(this, this.HandleMove);
+		inputContext.KeyReleased.connect(this, this.HandleStop);
+		inputContext.MouseEventReceived.connect(this, this.HandleMouse);
+		Log("**** InputHandler initialized...");
+	},
+	
+	// Handler for key press commands 
+	HandleMove: function(e)
+	{
+		if (e.keyCode == Qt.Key_W)
+			_g.move.amount.z = -1;
+		else if (e.keyCode == Qt.Key_S)
+			_g.move.amount.z = 1;
+		else if (e.keyCode == Qt.Key_D)
+			_g.move.amount.x = 1;
+		else if (e.keyCode == Qt.Key_A)
+			_g.move.amount.x = -1;
+		else if (e.keyCode == Qt.Key_Space)
+			_g.move.amount.y = 1;
+		else if (e.keyCode == Qt.Key_C)
+			_g.move.amount.y = -1;
+	},
+	
+	// Handler for key release commands
+	HandleStop: function(e)
+	{
+    if (e.keyCode == Qt.Key_W && _g.move.amount.z == -1)
+        _g.move.amount.z = 0;
+    else if (e.keyCode == Qt.Key_S && _g.move.amount.z == 1)
+        _g.move.amount.z = 0;
+    else if (e.keyCode == Qt.Key_D && _g.move.amount.x == 1)
+        _g.move.amount.x = 0;
+    else if (e.keyCode == Qt.Key_A && _g.move.amount.x == -1)
+        _g.move.amount.x = 0;
+    else if (e.keyCode == Qt.Key_Space && _g.move.amount.y == 1)
+        _g.move.amount.y = 0;
+    else if (e.keyCode == Qt.Key_C && _g.move.amount.y == -1)
+        _g.move.amount.y = 0;
+	},
+
+	// Handler for mouse events
+	HandleMouse: function(e)
+	{
+		if (e.IsButtonDown(2) && !input.IsMouseCursorVisible())
+		{
+			if (e.relativeX != 0)
+				this.HandleMouseLookX(e.relativeX);
+			if (e.relativeY != 0)
+				this.HandleMouseLookY(e.relativeY);
+		}
+	},
+
+	// Handler for mouse x axis relative movement
+	HandleMouseLookX: function(param)
+	{
+		//if (!IsCameraActive())
+		//	return;
+		var me = voidentity;
+		var transform = me.placeable.transform;
+		transform.rot.y -= _g.rotate.sensitivity * parseInt(param);
+		me.placeable.transform = transform;
+	},
+
+	// Handler for mouse y axis relative movement
+	HandleMouseLookY: function(param)
+	{
+		// if (!IsCameraActive())
+		// return;
 		
+		var me = voidentity;
+		var transform = me.placeable.transform;
+		transform.rot.x -= _g.rotate.sensitivity * parseInt(param);
+		if (transform.rot.x > 90.0)
+			transform.rot.x = 90.0;
+		if (transform.rot.x < -90.0)
+			transform.rot.x = -90.0;
+		me.placeable.transform = transform;
+	},
 	
 	// Remove FreeLookCamera from the scene
 	removeFreeLookCamera: function()
@@ -71,3 +204,5 @@ var MasterClient = Class.extend
 
 // Startup
 _p = new MasterClient();
+
+// EOF

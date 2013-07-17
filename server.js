@@ -50,3 +50,5 @@ var Server = Class.extend
 
 // Startup
 _p = new Server();
+
+// EOF
