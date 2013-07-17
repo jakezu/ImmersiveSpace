@@ -8,17 +8,17 @@ var voidentity = scene.GetEntityByName("Void");
 
 var _g =
 {
-    connected : false,
-    rotate :
-    {
-        sensitivity : 0.3
-    },
-    move :
-    {
-        sensitivity : 30.0,
-        amount : new float3(0,0,0)
-    },
-    motion : new float3(0,0,0),
+	connected : false,
+	rotate :
+	{
+		sensitivity : 0.3
+	},
+	move :
+	{
+		sensitivity : 30.0,
+		amount : new float3(0,0,0)
+	},
+	motion : new float3(0,0,0),
 };
 
 
@@ -28,7 +28,7 @@ var MasterClient = Class.extend
 	{
 
 		// Connect frame updates and enabled inputmapper
-        frame.Updated.connect(this, this.Update);
+		frame.Updated.connect(this, this.Update);
 		
 		this.data = {};
 		
@@ -45,13 +45,6 @@ var MasterClient = Class.extend
 	Update: function(frametime)
 	{
 		profiler.BeginBlock("FreeLookCamera_Update");
-		/*
-		if (!IsCameraActive())
-		{
-			profiler.EndBlock();
-			return;
-		}
-		*/
 
 		if (_g.move.amount.x == 0 && _g.move.amount.y == 0 && _g.move.amount.z == 0)
 		{
@@ -63,9 +56,8 @@ var MasterClient = Class.extend
 		_g.motion.y = _g.move.amount.y * _g.move.sensitivity * frametime;
 		_g.motion.z = _g.move.amount.z * _g.move.sensitivity * frametime;
 		
-		var me = voidentity;
-		_g.motion = me.placeable.Orientation().Mul(_g.motion);
-		me.placeable.SetPosition(me.placeable.Position().Add(_g.motion));
+		_g.motion = voidentity.placeable.Orientation().Mul(_g.motion);
+		voidentity.placeable.SetPosition(voidentity.placeable.Position().Add(_g.motion));
 
 		profiler.EndBlock();
 	},
@@ -136,18 +128,18 @@ var MasterClient = Class.extend
 	// Handler for key release commands
 	HandleStop: function(e)
 	{
-    if (e.keyCode == Qt.Key_W && _g.move.amount.z == -1)
-        _g.move.amount.z = 0;
-    else if (e.keyCode == Qt.Key_S && _g.move.amount.z == 1)
-        _g.move.amount.z = 0;
-    else if (e.keyCode == Qt.Key_D && _g.move.amount.x == 1)
-        _g.move.amount.x = 0;
-    else if (e.keyCode == Qt.Key_A && _g.move.amount.x == -1)
-        _g.move.amount.x = 0;
-    else if (e.keyCode == Qt.Key_Space && _g.move.amount.y == 1)
-        _g.move.amount.y = 0;
-    else if (e.keyCode == Qt.Key_C && _g.move.amount.y == -1)
-        _g.move.amount.y = 0;
+	if (e.keyCode == Qt.Key_W && _g.move.amount.z == -1)
+		_g.move.amount.z = 0;
+	else if (e.keyCode == Qt.Key_S && _g.move.amount.z == 1)
+		_g.move.amount.z = 0;
+	else if (e.keyCode == Qt.Key_D && _g.move.amount.x == 1)
+		_g.move.amount.x = 0;
+	else if (e.keyCode == Qt.Key_A && _g.move.amount.x == -1)
+		_g.move.amount.x = 0;
+	else if (e.keyCode == Qt.Key_Space && _g.move.amount.y == 1)
+		_g.move.amount.y = 0;
+	else if (e.keyCode == Qt.Key_C && _g.move.amount.y == -1)
+		_g.move.amount.y = 0;
 	},
 
 	// Handler for mouse events
@@ -165,28 +157,21 @@ var MasterClient = Class.extend
 	// Handler for mouse x axis relative movement
 	HandleMouseLookX: function(param)
 	{
-		//if (!IsCameraActive())
-		//	return;
-		var me = voidentity;
-		var transform = me.placeable.transform;
+		var transform = voidentity.placeable.transform;
 		transform.rot.y -= _g.rotate.sensitivity * parseInt(param);
-		me.placeable.transform = transform;
+		voidentity.placeable.transform = transform;
 	},
 
 	// Handler for mouse y axis relative movement
 	HandleMouseLookY: function(param)
 	{
-		// if (!IsCameraActive())
-		// return;
-		
-		var me = voidentity;
-		var transform = me.placeable.transform;
+		var transform = voidentity.placeable.transform;
 		transform.rot.x -= _g.rotate.sensitivity * parseInt(param);
 		if (transform.rot.x > 90.0)
 			transform.rot.x = 90.0;
 		if (transform.rot.x < -90.0)
 			transform.rot.x = -90.0;
-		me.placeable.transform = transform;
+		voidentity.placeable.transform = transform;
 	},
 	
 	// Remove FreeLookCamera from the scene
