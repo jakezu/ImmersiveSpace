@@ -1,6 +1,7 @@
 engine.IncludeFile("local://class.js"); // from jsmodules/lib
 
 var _p = null;
+var voidentity = scene.GetEntityByName("Void");
 
 var MasterClient = Class.extend
 ({
@@ -13,6 +14,7 @@ var MasterClient = Class.extend
 
         this.createMasterClient();
 		this.setMasterCamera();
+		this.setSpawnPoint();
         
         this.removeFreeLookCamera();
     },
@@ -25,7 +27,7 @@ var MasterClient = Class.extend
 		masterclient.SetName("MasterClient");
 		masterclient.SetTemporary(true);
 		var placeable = masterclient.placeable;
-		var voidentity = scene.GetEntityByName("Void");
+		//var voidentity = scene.GetEntityByName("Void");
 		
 		// set parenting reference to the Server's Void-entity
 		placeable.SetParent(voidentity, preserveWorldTransform=false);
@@ -44,6 +46,15 @@ var MasterClient = Class.extend
 		mastercamera.SetActive();
 
 	},
+	// Set initial spawn point
+	setSpawnPoint: function()
+	{
+		var void_placeable = voidentity.placeable;
+		var void_transform = void_placeable.transform;
+		void_transform.pos = new float3(0, 20, 0);
+		voidentity.placeable.transform = void_transform;
+	},
+		
 	
 	// Remove FreeLookCamera from the scene
 	removeFreeLookCamera: function()
