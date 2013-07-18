@@ -14,7 +14,8 @@ In this example server's ip-address is "192.168.1.10", port is "2345", scene fil
          Options.... 
       </Directory>
 - enable ScriptImporter: open plugins.xml for editing and add <jsplugin path="ScriptImporter/ScriptImporter.js" />
-- start Tundra server: tundra --server --file scene.txml
+- copy ImmersiveSpace.js, server.js, masterclient.js and slaveclients.js files to the scene directory
+- start Tundra server: tundra --server --file <URL or path to scene directory>/scene.txml
 - drag and drop ImmersiveSpace.js file into the tundra window
 - delete, if needed, unnecessary entities and components from the scene. FreeLookCamera entity has been automatically removed from the scene by this script
 
