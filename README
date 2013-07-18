@@ -3,7 +3,9 @@ realXtend based immersive space script.
 This script is used to create the immersive space of six invidual client machines.
 ScriptImporter jsmodule is needed to import this file into the existing scene.
 
+
 To test:
+
 
 Server:
 Server is responsible for the hosting scene to the clients and for the creating the entity which serves offsets to the clients' cameras.
@@ -13,11 +15,21 @@ In this example server's ip-address is "192.168.1.10", port is "2345", scene fil
       <Directory "<DocumentRoot>/DemoScene"> 
          Options.... 
       </Directory>
+
+You can start server and import ImmersiveSpace.js to the scene by two different ways:
+
+1)
 - enable ScriptImporter: open plugins.xml for editing and add <jsplugin path="ScriptImporter/ScriptImporter.js" />
 - copy ImmersiveSpace.js, server.js, masterclient.js and slaveclients.js files to the scene directory
 - start Tundra server: tundra --server --file <URL or path to scene directory>/scene.txml
 - drag and drop ImmersiveSpace.js file into the tundra window
-- delete, if needed, unnecessary entities and components from the scene. FreeLookCamera entity has been automatically removed from the scene by this script
+
+2)
+- run Tundra with "--run ScriptImporter\ScriptImporter.js" command line argument (no need to enable ScriptImporter in plugins.xml)
+- start Tundra server: tundra --server --file <URL or path to scene directory>/scene.txml --run ScriptImporter\ScriptImporter.js
+- drag and drop ImmersiveSpace.js file into the tundra window
+
+
 
 Master client:
 This client is responsible for the input commands (camera moving and rotating), and sending other control messages to the server and the slave clients. Plug input devices (e.g. keyboard and mouse) to this computer.
@@ -26,6 +38,8 @@ Valid username for the master client is "client1".
 - make local directory for the assets (for example c:\data\assets\)
 - connect to the Tundra server: 
     tundra --login tundra://192.168.1.10:2345/?username=client1 --storage "src=http://192.168.1.10/DemoScene/;localdir=c:\data\assets\;name=web"
+
+
 
 Slave clients:
 These clients just connects to the server and get's their camera offsets and other control messages from the server and Master client.
