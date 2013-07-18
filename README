@@ -4,7 +4,7 @@ This script is used to create the immersive space of six invidual client machine
 ScriptImporter jsmodule is needed to import this file into the existing scene.
 
 
-To test:
+Below are some tips how you can use this script in existing scenes.
 
 
 Server:
@@ -25,6 +25,7 @@ You can start server and import ImmersiveSpace.js to the scene by two different 
 - drag and drop ImmersiveSpace.js file into the tundra window
 
 2)
+- copy ImmersiveSpace.js, server.js, masterclient.js and slaveclients.js files to the scene directory
 - run Tundra with "--run ScriptImporter\ScriptImporter.js" command line argument (no need to enable ScriptImporter in plugins.xml)
 - start Tundra server: tundra --server --file <URL or path to scene directory>/scene.txml --run ScriptImporter\ScriptImporter.js
 - drag and drop ImmersiveSpace.js file into the tundra window
