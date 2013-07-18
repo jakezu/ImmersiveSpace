@@ -16,7 +16,7 @@ Let's say that server's ip-address is "192.168.1.10", port is "2345", scene file
          Options.... 
       </Directory>
 
-You can start server and import ImmersiveSpace.js to the scene by two different ways:
+You can start Tundra server and import ImmersiveSpace.js to the scene by two different ways:
 
 1)
 - enable ScriptImporter: open plugins.xml for editing and add <jsplugin path="ScriptImporter/ScriptImporter.js" />
