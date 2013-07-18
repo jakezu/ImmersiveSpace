@@ -4,6 +4,7 @@ engine.ImportExtension("qt.gui");
 engine.ImportExtension("qt.webkit");
 
 var _p = null;
+var sector = 1;
 var voidentity = scene.GetEntityByName("Void");
 
 var _g =
@@ -15,7 +16,7 @@ var _g =
 	},
 	move :
 	{
-		sensitivity : 30.0,
+		sensitivity : 20.0,
 		amount : new float3(0,0,0)
 	},
 	motion : new float3(0,0,0),
@@ -111,35 +112,96 @@ var MasterClient = Class.extend
 	// Handler for key press commands 
 	HandleMove: function(e)
 	{
+		var radians = (sector-1)*60*Math.PI/180;
+		
+		// forward
 		if (e.keyCode == Qt.Key_W)
-			_g.move.amount.z = -1;
+		{
+			//_g.move.amount.z = -1;
+			_g.move.amount.z = -Math.cos(radians);
+			_g.move.amount.x = Math.sin(radians);
+		}
+		
+		// backward
 		else if (e.keyCode == Qt.Key_S)
-			_g.move.amount.z = 1;
+		{
+			//_g.move.amount.z = 1;
+			_g.move.amount.z = Math.cos(radians);
+			_g.move.amount.x = -Math.sin(radians);
+		}
+		
+		// right
 		else if (e.keyCode == Qt.Key_D)
-			_g.move.amount.x = 1;
+		{
+			//_g.move.amount.x = 1;
+			_g.move.amount.z = Math.sin(radians);
+			_g.move.amount.x = Math.cos(radians);
+		}
+		
+		// left
 		else if (e.keyCode == Qt.Key_A)
-			_g.move.amount.x = -1;
+		{
+			//_g.move.amount.x = -1;
+			_g.move.amount.z = -Math.sin(radians);
+			_g.move.amount.x = -Math.cos(radians);
+		}
+		
+		// up
 		else if (e.keyCode == Qt.Key_Space)
 			_g.move.amount.y = 1;
+		
+		// down
 		else if (e.keyCode == Qt.Key_C)
 			_g.move.amount.y = -1;
+		
+		// change sector +
+		else if (e.keyCode == Qt.Key_Plus)
+		{
+			if (sector < 6)
+				sector++;
+			else
+				sector = 1;
+			//Log("**** sector: " + sector);
+		}
+		
+		// change sector -
+		else if (e.keyCode == Qt.Key_Plus)
+		{
+			if (sector > 1)
+				sector--;
+			else
+				sector = 6;
+			//Log("**** sector: " + sector);
+		}		
 	},
 	
 	// Handler for key release commands
 	HandleStop: function(e)
 	{
-	if (e.keyCode == Qt.Key_W && _g.move.amount.z == -1)
-		_g.move.amount.z = 0;
-	else if (e.keyCode == Qt.Key_S && _g.move.amount.z == 1)
-		_g.move.amount.z = 0;
-	else if (e.keyCode == Qt.Key_D && _g.move.amount.x == 1)
-		_g.move.amount.x = 0;
-	else if (e.keyCode == Qt.Key_A && _g.move.amount.x == -1)
-		_g.move.amount.x = 0;
-	else if (e.keyCode == Qt.Key_Space && _g.move.amount.y == 1)
-		_g.move.amount.y = 0;
-	else if (e.keyCode == Qt.Key_C && _g.move.amount.y == -1)
-		_g.move.amount.y = 0;
+	
+	//if (e.keyCode == Qt.Key_W && _g.move.amount.z == -1)
+	if (e.keyCode == Qt.Key_W && _g.move.amount.z != 0 )
+		_g.move.amount = new float3(0,0,0);
+	
+	//else if (e.keyCode == Qt.Key_S && _g.move.amount.z == 1)
+	else if (e.keyCode == Qt.Key_S && _g.move.amount.z != 0)
+		_g.move.amount = new float3(0,0,0);
+	
+	//else if (e.keyCode == Qt.Key_D && _g.move.amount.x == 1)
+	else if (e.keyCode == Qt.Key_D && _g.move.amount.x != 0)
+		_g.move.amount = new float3(0,0,0);
+		
+	//else if (e.keyCode == Qt.Key_A && _g.move.amount.x == -1)
+	else if (e.keyCode == Qt.Key_A && _g.move.amount.x != 0)
+		_g.move.amount = new float3(0,0,0);
+	
+	//else if (e.keyCode == Qt.Key_Space && _g.move.amount.y == 1)
+	else if (e.keyCode == Qt.Key_Space && _g.move.amount.y != 0)
+		_g.move.amount = new float3(0,0,0);
+		
+	//else if (e.keyCode == Qt.Key_C && _g.move.amount.y == -1)
+	else if (e.keyCode == Qt.Key_C && _g.move.amount.y != 0)
+		_g.move.amount = new float3(0,0,0);
 	},
 
 	// Handler for mouse events
@@ -166,7 +228,11 @@ var MasterClient = Class.extend
 	HandleMouseLookY: function(param)
 	{
 		var transform = voidentity.placeable.transform;
+		var radians = (sector-1)*60*Math.PI/180;
+		//transform.rot.x -= _g.rotate.sensitivity * parseInt(param);
 		transform.rot.x -= _g.rotate.sensitivity * parseInt(param);
+		//transform.rot.y += _g.rotate.sensitivity * parseInt(param);
+		//_g.move.amount.z = -Math.cos(radians);
 		if (transform.rot.x > 90.0)
 			transform.rot.x = 90.0;
 		if (transform.rot.x < -90.0)
