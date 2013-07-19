@@ -35,12 +35,13 @@ var MasterClient = Class.extend
 		
 		Log("**** Creating master client objects");
 
+		this.removeFreeLookCamera();
 		this.createMasterClient();
 		this.setMasterCamera();
 		this.setSpawnPoint();
 		this.createInputHandler();
+		this.createHUD();
 
-		this.removeFreeLookCamera();
 	},
 	
 	Update: function(frametime)
@@ -238,6 +239,18 @@ var MasterClient = Class.extend
 		if (transform.rot.x < -90.0)
 			transform.rot.x = -90.0;
 		voidentity.placeable.transform = transform;
+	},
+	
+	createHUD: function()
+	{
+		var uiplane = renderer.CreateUiPlane("HUD");
+		//uiplane.SetTexture(asset.GetAsset("compassb.png"));
+		uiplane.SetTexture(asset.GetAsset("HiRes2.png"));
+		//uiplane.SetTexture(asset.GetAsset("Compass_Rose.jpg"));
+		uiplane.Show();
+		uiplane.SetWidth(200, true);
+		uiplane.SetHeight(200, true);	
+		uiplane.SetRotation(45);
 	},
 	
 	// Remove FreeLookCamera from the scene

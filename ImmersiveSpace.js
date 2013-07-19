@@ -1,6 +1,7 @@
 /* ImmersiveSpace.js */
 
 /*
+// !ref: helpers.js
 // !ref: server.js
 // !ref: masterclient.js
 // !ref: slaveclients.js
