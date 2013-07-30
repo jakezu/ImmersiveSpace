@@ -1,11 +1,19 @@
 engine.IncludeFile("local://class.js"); // from jsmodules/lib
+/*
 engine.ImportExtension("qt.core");
 engine.ImportExtension("qt.gui");
 engine.ImportExtension("qt.webkit");
+*/
 
 var _p = null;
 var sector = 1;
 var voidentity = scene.GetEntityByName("Void");
+var compass = new QPixmap();
+var angle = 0;
+var label = new QLabel();
+var proxy = new UiProxyWidget(label);
+var distance_to_north = 10000;
+ui.AddProxyWidgetToScene(proxy);
 
 var _g =
 {
@@ -13,6 +21,7 @@ var _g =
 	rotate :
 	{
 		sensitivity : 0.3
+		//sensitivity : 1.0
 	},
 	move :
 	{
@@ -31,16 +40,21 @@ var MasterClient = Class.extend
 		// Connect frame updates and enabled inputmapper
 		frame.Updated.connect(this, this.Update);
 		
-		this.data = {};
-		
 		Log("**** Creating master client objects");
+		
+
 
 		this.removeFreeLookCamera();
 		this.createMasterClient();
 		this.setMasterCamera();
 		this.setSpawnPoint();
 		this.createInputHandler();
-		this.createHUD();
+		this.statusWidget();
+		this.drawCompass();
+		this.drawForwardIndicator();
+		
+		// Signals
+		//voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
 
 	},
 	
@@ -104,16 +118,17 @@ var MasterClient = Class.extend
 	{
 		var inputContext = input.RegisterInputContextRaw("FreeLookCamera", 101);
 		inputContext.takeMouseEventsOverQt = true;
-		inputContext.KeyPressed.connect(this, this.HandleMove);
-		inputContext.KeyReleased.connect(this, this.HandleStop);
+		inputContext.KeyPressed.connect(this, this.HandleKeyPress);
+		inputContext.KeyReleased.connect(this, this.HandleKeyRelease);
 		inputContext.MouseEventReceived.connect(this, this.HandleMouse);
 		Log("**** InputHandler initialized...");
 	},
 	
 	// Handler for key press commands 
-	HandleMove: function(e)
+	HandleKeyPress: function(e)
 	{
-		var radians = (sector-1)*60*Math.PI/180;
+		//var radians = (sector-1)*60*Math.PI/180;
+		var radians = -angle*Math.PI/180;
 		
 		// forward
 		if (e.keyCode == Qt.Key_W)
@@ -137,6 +152,9 @@ var MasterClient = Class.extend
 			//_g.move.amount.x = 1;
 			_g.move.amount.z = Math.sin(radians);
 			_g.move.amount.x = Math.cos(radians);
+			angle-=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
+			compass.setRotation(angle);
+			this.statusWidget(-angle);
 		}
 		
 		// left
@@ -145,6 +163,9 @@ var MasterClient = Class.extend
 			//_g.move.amount.x = -1;
 			_g.move.amount.z = -Math.sin(radians);
 			_g.move.amount.x = -Math.cos(radians);
+			angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
+			compass.setRotation(angle);
+			this.statusWidget(-angle);			
 		}
 		
 		// up
@@ -159,25 +180,45 @@ var MasterClient = Class.extend
 		else if (e.keyCode == Qt.Key_Plus)
 		{
 			if (sector < 6)
+			{
 				sector++;
+				angle -= 60;
+			}
 			else
+			{
 				sector = 1;
+				angle = 0;
+			}
+			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
+			//angle -= 60;
+			compass.setRotation(angle);
+			this.statusWidget(-angle);			
 			//Log("**** sector: " + sector);
 		}
 		
 		// change sector -
-		else if (e.keyCode == Qt.Key_Plus)
+		else if (e.keyCode == Qt.Key_Minus)
 		{
 			if (sector > 1)
+			{
 				sector--;
+				angle += 60;
+			}
 			else
+			{
 				sector = 6;
+				angle = -360;
+			}
+			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
+			//angle += 60;
+			compass.setRotation(-angle);
+			this.statusWidget(-angle);
 			//Log("**** sector: " + sector);
 		}		
 	},
 	
 	// Handler for key release commands
-	HandleStop: function(e)
+	HandleKeyRelease: function(e)
 	{
 	
 	//if (e.keyCode == Qt.Key_W && _g.move.amount.z == -1)
@@ -208,6 +249,7 @@ var MasterClient = Class.extend
 	// Handler for mouse events
 	HandleMouse: function(e)
 	{
+		//this.statusWidget(e.relativeX);
 		if (e.IsButtonDown(2) && !input.IsMouseCursorVisible())
 		{
 			if (e.relativeX != 0)
@@ -223,6 +265,20 @@ var MasterClient = Class.extend
 		var transform = voidentity.placeable.transform;
 		transform.rot.y -= _g.rotate.sensitivity * parseInt(param);
 		voidentity.placeable.transform = transform;
+		if (angle>360)
+			angle -= 360;
+		else if (angle <-360)
+			angle += 360;
+		else
+			angle -= _g.rotate.sensitivity * parseInt(param);
+			//angle -= (60/640)*parseInt(param)*Math.PI;
+			//angle += parseInt(param)+((angle/1280)*(1/80));
+		var rot = new float3(0, parseFloat(angle), 0);
+		compass.setRotation(angle);
+		//this.statusWidget(transform.rot.y);
+		//this.statusWidget(resolution.width());
+		this.statusWidget(-angle);
+		//Log(angle);
 	},
 
 	// Handler for mouse y axis relative movement
@@ -241,7 +297,45 @@ var MasterClient = Class.extend
 		voidentity.placeable.transform = transform;
 	},
 	
-	createHUD: function()
+	statusWidget: function(message, row){
+		if (typeof(row)==='undefined') 
+			row=0;
+		label.indent = 10;
+		label.text = message;
+		label.setStyleSheet("QLabel {background-color: transparent; color: white; font-size: 16px; }");
+		proxy.x = 10;
+		proxy.y = 200+row*20;
+		proxy.windowFlags = 0;
+		proxy.visible = true;
+		/**/
+	},
+
+	drawCompass: function()
+	{
+		var pixmap_compass = new QPixmap(asset.GetAsset("compassd.png").DiskSource());
+		var pixmap_needle = new QPixmap(asset.GetAsset("needle.png").DiskSource());
+		//var pixmap = ui.GraphicsScene().addPixmap(pixmap_compass);
+		compass = ui.GraphicsScene().addPixmap(pixmap_compass);
+		var needle = ui.GraphicsScene().addPixmap(pixmap_needle);
+		compass.setTransformOriginPoint(pixmap_compass.height()/2, pixmap_compass.width()/2);
+		//pixmap.setRotation(90);
+
+	},
+	
+	rotateCompass: function(angle)
+	{
+		pixmap.setRotation(angle);
+		pixmap.setRotation(angle+90);
+	},
+	
+	drawForwardIndicator: function(angle)
+	{
+		var pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
+		var arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
+		arrow.setPos(resolution.width()/2-(135/2),resolution.height()-pixmap_arrow.height());
+	},
+	
+	createHUD2: function()
 	{
 		var uiplane = renderer.CreateUiPlane("HUD");
 		//uiplane.SetTexture(asset.GetAsset("compassb.png"));
