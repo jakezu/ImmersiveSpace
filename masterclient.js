@@ -6,14 +6,31 @@ engine.ImportExtension("qt.webkit");
 */
 
 var _p = null;
-var sector = 1;
+var sector = 0;
 var voidentity = scene.GetEntityByName("Void");
 var compass = new QPixmap();
+var pixmap_arrow = new QPixmap();
+var arrow = new QPixmap();
 var angle = 0;
-var label = new QLabel();
-var proxy = new UiProxyWidget(label);
+var compass_angle = 0;
+//var label = new QLabel();
+//var label2 = new QLabel();
+//var proxy = new UiProxyWidget(label);
+//var proxy2 = new UiProxyWidget(label);
 var distance_to_north = 10000;
-ui.AddProxyWidgetToScene(proxy);
+//ui.AddProxyWidgetToScene(proxy);
+
+//var layout = new QVBoxLayout();
+//var mainWidget = new QWidget();
+//mainWidget.setLayout(layout);
+
+var proxy = new UiProxyWidget();
+var mainWidget = new QWidget();
+var widget1 = new QLabel();
+var widget2 = new QLabel();
+var widget3 = new QLabel();
+var widget4 = new QLabel();
+
 
 var _g =
 {
@@ -41,22 +58,89 @@ var MasterClient = Class.extend
 		frame.Updated.connect(this, this.Update);
 		
 		Log("**** Creating master client objects");
-		
+		widget1.text = "Client1 (MasterClient)";
 
+		this.setWidgetLayout();
 
 		this.removeFreeLookCamera();
 		this.createMasterClient();
 		this.setMasterCamera();
 		this.setSpawnPoint();
 		this.createInputHandler();
-		this.statusWidget();
+		//this.statusWidget();
+		//this.statusWidget2();
 		this.drawCompass();
 		this.drawForwardIndicator();
 		
 		// Signals
-		//voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
-
+		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
+		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
+		
 	},
+	
+	setWidgetLayout: function()
+	{
+		var layout = new QVBoxLayout();
+		//var mainWidget = new QWidget();
+		mainWidget.setLayout(layout);
+		//var widget1 = new QLabel();
+		//var widget2 = new QLabel();
+		layout.addWidget(widget1, 0, 1);
+		layout.addWidget(widget2, 0, 1);
+		layout.addWidget(widget3, 0, 1);
+		layout.addWidget(widget4, 0, 1);
+        //layout.setContentsMargins(0,0,0,0);
+        //layout.setSpacing(0);
+		proxy = ui.AddWidgetToScene(mainWidget);
+		//proxy.windowFlags = Qt.Widget;
+		//mainWidget.setStyleSheet("QLabel {background-color: transparent; color: black; font-size: 16px; opacity: 0,2;}");
+		mainWidget.setStyleSheet("QLabel {color: black; font-size: 14px;}");
+		widget1.setStyleSheet("QLabel {color: blue; font-size: 18px; font-weight: bold;}");
+		rect = ui.GraphicsScene().sceneRect;
+		proxy.windowFlags = 0;
+		proxy.visible = true;
+		proxy.y = 10;
+		proxy.x = rect.width()-mainWidget.width-10;
+		mainWidget.setWindowOpacity(0.3);
+		//widget1.text = mainWidget.width;
+		//widget2.text = rect.width();
+	},
+	
+	ChangeForwardDirection: function(sector)
+	{
+		ui.GraphicsScene().removeItem(arrow);
+		if ((parseInt(sector)+1) == 1) // MasterClient's ID
+		{
+			//ui.GraphicsScene().addPixmap(pixmap_arrow);
+			this.drawForwardIndicator();
+			//this.statusWidget("Kulkusuunta");
+			widget2.text = "Kulkusuunta";
+		}
+		else
+			//this.statusWidget("Kulkusuunta client"+sector+":llä");
+			widget2.text = "Kulkusuunta client"+sector+":llä";
+	},
+	
+	windowResized: function(rect)
+	{
+		//this.statusWidget(rect.width());
+		arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
+		proxy.x = rect.width()-mainWidget.width-10;
+	},
+	
+	WindowResizeListener: function(widg, callbackFunction)
+	{
+		widg.WindowResized = callbackFunction;
+		var gscene = ui.GraphicsScene().scene();
+		gscene.sceneRectChanged.connect(widg, widg.WindowResized);		
+	},
+	
+	/*
+	WindowResizeListener: function(ui.GraphicsScene(), callbackFunction)
+	{
+		ui.GraphicsScene().sceneRectChanged.connect(ui.GraphicsScene(), ui.GraphicsScene.WindowResized);
+	},
+	*/
 	
 	Update: function(frametime)
 	{
@@ -128,7 +212,8 @@ var MasterClient = Class.extend
 	HandleKeyPress: function(e)
 	{
 		//var radians = (sector-1)*60*Math.PI/180;
-		var radians = -angle*Math.PI/180;
+		//var radians = -angle*Math.PI/180;
+		var radians = angle*Math.PI/180;
 		
 		// forward
 		if (e.keyCode == Qt.Key_W)
@@ -153,8 +238,10 @@ var MasterClient = Class.extend
 			_g.move.amount.z = Math.sin(radians);
 			_g.move.amount.x = Math.cos(radians);
 			angle-=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
-			compass.setRotation(angle);
-			this.statusWidget(-angle);
+			compass_angle = -angle;
+			compass.setRotation(compass_angle);
+			//this.statusWidget(-angle);
+			widget4.text = -angle;
 		}
 		
 		// left
@@ -164,8 +251,10 @@ var MasterClient = Class.extend
 			_g.move.amount.z = -Math.sin(radians);
 			_g.move.amount.x = -Math.cos(radians);
 			angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
-			compass.setRotation(angle);
-			this.statusWidget(-angle);			
+			compass_angle = -angle;
+			compass.setRotation(compass_angle);
+			//this.statusWidget(-angle);
+			widget4.text = -angle;
 		}
 		
 		// up
@@ -179,42 +268,78 @@ var MasterClient = Class.extend
 		// change sector +
 		else if (e.keyCode == Qt.Key_Plus)
 		{
-			if (sector < 6)
+			//if (sector < 6)
+			//if ((angle+60) < 360)
+			if (sector < 5)
 			{
 				sector++;
-				angle -= 60;
+				//angle += 60;
 			}
 			else
 			{
-				sector = 1;
-				angle = 0;
+				sector = 0;
+				//angle -= 300;
 			}
+			angle = sector*60;
 			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
-			//angle -= 60;
-			compass.setRotation(angle);
-			this.statusWidget(-angle);			
+			compass_angle = -angle;
+			compass.setRotation(compass_angle);
+			if (angle==0)
+				//this.statusWidget("0/360");
+				widget4.text = "0/360";
+			else
+				//this.statusWidget(angle);
+				widget4.text = angle
+			//this.statusWidget2(sector);
+			widget3.text = "Sector: "+sector;
 			//Log("**** sector: " + sector);
 		}
 		
 		// change sector -
 		else if (e.keyCode == Qt.Key_Minus)
 		{
-			if (sector > 1)
+			//if (sector > 1)
+			//if ((angle-60) > 0)
+			if (sector > 0)
 			{
 				sector--;
-				angle += 60;
+				//angle -= 60;
+				//angle = sector*60;
 			}
 			else
 			{
-				sector = 6;
-				angle = -360;
+				//sector = 6;
+				sector = 5;
+				//angle = 300+angle;
 			}
+			angle = sector*60;
 			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
-			//angle += 60;
-			compass.setRotation(-angle);
-			this.statusWidget(-angle);
+			compass_angle = -angle;
+			compass.setRotation(compass_angle);
+			if (angle==0)
+				//this.statusWidget("0/360");
+				widget4.text = angle;
+			else
+				//this.statusWidget(angle);
+				widget4.text = angle;
+			this.statusWidget2(sector);
+			widget3.text = "Sector: "+sector;
 			//Log("**** sector: " + sector);
-		}		
+		}
+
+		// Reset direction
+		else if (e.keyCode == Qt.Key_R)
+		{
+			sector = 0;
+			angle = 0;
+			compass_angle = -angle;
+			compass.setRotation(compass_angle);
+			//this.statusWidget("0/360");
+			widget3.text = "Sector: "+sector;
+			widget4.text = angle;
+			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
+		}
+		
 	},
 	
 	// Handler for key release commands
@@ -265,19 +390,16 @@ var MasterClient = Class.extend
 		var transform = voidentity.placeable.transform;
 		transform.rot.y -= _g.rotate.sensitivity * parseInt(param);
 		voidentity.placeable.transform = transform;
-		if (angle>360)
-			angle -= 360;
-		else if (angle <-360)
-			angle += 360;
+		if ((angle+_g.rotate.sensitivity * parseInt(param)) > 360)
+			angle += (_g.rotate.sensitivity * parseInt(param)) - 360;
+		else if ((angle+_g.rotate.sensitivity * parseInt(param)) < 0)
+			angle += (_g.rotate.sensitivity * parseInt(param)) + 360;
 		else
-			angle -= _g.rotate.sensitivity * parseInt(param);
-			//angle -= (60/640)*parseInt(param)*Math.PI;
-			//angle += parseInt(param)+((angle/1280)*(1/80));
-		var rot = new float3(0, parseFloat(angle), 0);
-		compass.setRotation(angle);
-		//this.statusWidget(transform.rot.y);
-		//this.statusWidget(resolution.width());
-		this.statusWidget(-angle);
+			angle += _g.rotate.sensitivity * parseInt(param);
+		compass_angle = -angle;
+		compass.setRotation(compass_angle);
+		//this.statusWidget(angle);
+		widget4.text = angle;
 		//Log(angle);
 	},
 
@@ -309,6 +431,19 @@ var MasterClient = Class.extend
 		proxy.visible = true;
 		/**/
 	},
+	
+	statusWidget2: function(message, row){
+		if (typeof(row)==='undefined') 
+			row=0;
+		label2.indent = 10;
+		label2.text = message;
+		label2.setStyleSheet("QLabel {background-color: white; color: blue; font-size: 26px; }");
+		proxy.x = 10;
+		proxy.y = 230+row*20;
+		proxy.windowFlags = 0;
+		proxy.visible = true;
+		/**/
+	},	
 
 	drawCompass: function()
 	{
@@ -330,9 +465,13 @@ var MasterClient = Class.extend
 	
 	drawForwardIndicator: function(angle)
 	{
-		var pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
-		var arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
-		arrow.setPos(resolution.width()/2-(135/2),resolution.height()-pixmap_arrow.height());
+		//var pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
+		pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
+		//var arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
+		arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
+		//arrow.setPos(resolution.width()/2-(135/2),resolution.height()-pixmap_arrow.height());
+		rect = ui.GraphicsScene().sceneRect;
+		arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
 	},
 	
 	createHUD2: function()

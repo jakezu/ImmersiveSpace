@@ -22,8 +22,8 @@ else if (isClient())
 	engine.ImportExtension("qt.gui");
 	engine.ImportExtension("qt.webkit");
 	
-	var resolution = new QSize(1280, 800)
-	ui.MainWindow().size = resolution;
+	//var resolution = new QSize(1280, 800)
+	//ui.MainWindow().size = resolution;
 	// regular expression pattern for matching client name
 	var regexp = /client[2-6]/;
 	
