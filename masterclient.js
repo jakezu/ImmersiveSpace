@@ -1,11 +1,14 @@
 engine.IncludeFile("local://class.js"); // from jsmodules/lib
-/*
+
 engine.ImportExtension("qt.core");
 engine.ImportExtension("qt.gui");
 engine.ImportExtension("qt.webkit");
-*/
 
+
+// Globals
 var _p = null;
+var mastercamera;
+var fov = 38.5;
 var sector = 0;
 var voidentity = scene.GetEntityByName("Void");
 var compass = new QPixmap();
@@ -13,23 +16,14 @@ var pixmap_arrow = new QPixmap();
 var arrow = new QPixmap();
 var angle = 0;
 var compass_angle = 0;
-//var label = new QLabel();
-//var label2 = new QLabel();
-//var proxy = new UiProxyWidget(label);
-//var proxy2 = new UiProxyWidget(label);
 var distance_to_north = 10000;
-//ui.AddProxyWidgetToScene(proxy);
-
-//var layout = new QVBoxLayout();
-//var mainWidget = new QWidget();
-//mainWidget.setLayout(layout);
-
 var proxy = new UiProxyWidget();
 var mainWidget = new QWidget();
 var widget1 = new QLabel();
 var widget2 = new QLabel();
 var widget3 = new QLabel();
 var widget4 = new QLabel();
+var widget5 = new QLabel();
 
 
 var _g =
@@ -89,8 +83,9 @@ var MasterClient = Class.extend
 		layout.addWidget(widget2, 0, 1);
 		layout.addWidget(widget3, 0, 1);
 		layout.addWidget(widget4, 0, 1);
-        //layout.setContentsMargins(0,0,0,0);
-        //layout.setSpacing(0);
+		layout.addWidget(widget5, 0, 1);
+        layout.setContentsMargins(10,0,10,5);
+        layout.setSpacing(2);
 		proxy = ui.AddWidgetToScene(mainWidget);
 		//proxy.windowFlags = Qt.Widget;
 		//mainWidget.setStyleSheet("QLabel {background-color: transparent; color: black; font-size: 16px; opacity: 0,2;}");
@@ -114,11 +109,11 @@ var MasterClient = Class.extend
 			//ui.GraphicsScene().addPixmap(pixmap_arrow);
 			this.drawForwardIndicator();
 			//this.statusWidget("Kulkusuunta");
-			widget2.text = "Kulkusuunta";
+			widget2.text = "Direction of travel";
 		}
 		else
 			//this.statusWidget("Kulkusuunta client"+sector+":llä");
-			widget2.text = "Kulkusuunta client"+sector+":llä";
+			widget2.text = "Direction of travel: client"+sector;
 	},
 	
 	windowResized: function(rect)
@@ -181,11 +176,13 @@ var MasterClient = Class.extend
 	// Set MasterCamera parameters
 	setMasterCamera: function()
 	{
-		var mastercamera = masterclient.camera;
+		//var mastercamera = masterclient.camera;
+		mastercamera = masterclient.camera;
 		
 		// Field of vision (45 = default, 38.5 is good in one particular setup)
 		mastercamera.verticalFov = 38.5;
 		mastercamera.SetActive();
+		widget5.text = "Field of vision: "+fov;
 	},
 	
 	// Set initial spawn point
@@ -237,11 +234,13 @@ var MasterClient = Class.extend
 			//_g.move.amount.x = 1;
 			_g.move.amount.z = Math.sin(radians);
 			_g.move.amount.x = Math.cos(radians);
-			angle-=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
+			angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
+			if (angle > 360)
+				angle -= 360;
 			compass_angle = -angle;
 			compass.setRotation(compass_angle);
 			//this.statusWidget(-angle);
-			widget4.text = -angle;
+			widget4.text = "Bearing: " +(angle).toFixed(2);
 		}
 		
 		// left
@@ -250,11 +249,12 @@ var MasterClient = Class.extend
 			//_g.move.amount.x = -1;
 			_g.move.amount.z = -Math.sin(radians);
 			_g.move.amount.x = -Math.cos(radians);
-			angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
+			angle-=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
+			if (angle < 0)
+				angle += 360;
 			compass_angle = -angle;
 			compass.setRotation(compass_angle);
-			//this.statusWidget(-angle);
-			widget4.text = -angle;
+			widget4.text = "Bearing: " + (angle).toFixed(2);
 		}
 		
 		// up
@@ -268,75 +268,77 @@ var MasterClient = Class.extend
 		// change sector +
 		else if (e.keyCode == Qt.Key_Plus)
 		{
-			//if (sector < 6)
-			//if ((angle+60) < 360)
 			if (sector < 5)
-			{
 				sector++;
-				//angle += 60;
-			}
 			else
-			{
 				sector = 0;
-				//angle -= 300;
-			}
 			angle = sector*60;
 			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
 			compass_angle = -angle;
 			compass.setRotation(compass_angle);
-			if (angle==0)
-				//this.statusWidget("0/360");
-				widget4.text = "0/360";
-			else
-				//this.statusWidget(angle);
-				widget4.text = angle
-			//this.statusWidget2(sector);
 			widget3.text = "Sector: "+sector;
-			//Log("**** sector: " + sector);
+			widget4.text = "Bearing: " +parseInt(angle);
 		}
 		
 		// change sector -
 		else if (e.keyCode == Qt.Key_Minus)
 		{
-			//if (sector > 1)
-			//if ((angle-60) > 0)
 			if (sector > 0)
-			{
 				sector--;
-				//angle -= 60;
-				//angle = sector*60;
-			}
 			else
-			{
-				//sector = 6;
 				sector = 5;
-				//angle = 300+angle;
-			}
 			angle = sector*60;
 			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
 			compass_angle = -angle;
 			compass.setRotation(compass_angle);
-			if (angle==0)
-				//this.statusWidget("0/360");
-				widget4.text = angle;
-			else
-				//this.statusWidget(angle);
-				widget4.text = angle;
-			this.statusWidget2(sector);
 			widget3.text = "Sector: "+sector;
-			//Log("**** sector: " + sector);
+			widget4.text = "Bearing: " +parseInt(angle);
 		}
+		
+		// increse vertical fov
+		else if (e.keyCode == Qt.Key_Insert)
+		{
+			fov += 2.5;
+			mastercamera.verticalFov = fov;
+			widget5.text = "Field of vision: "+fov;
+		}
+		
+		// minor increse vertical fov
+		else if (e.keyCode == Qt.Key_Home)
+		{
+			fov += 0.25;
+			mastercamera.verticalFov = fov;
+			widget5.text = "Field of vision: "+fov;
+		}		
+		
+		// decrease vertical fov
+		else if (e.keyCode == Qt.Key_Delete)
+		{
+			fov -= 2.5;
+			mastercamera.verticalFov = fov;
+			widget5.text = "Field of vision: "+fov;
+		}
+		
+		// minor decrease vertical fov
+		else if (e.keyCode == Qt.Key_End)
+		{
+			fov -= 0.25;
+			mastercamera.verticalFov = fov;
+			widget5.text = "Field of vision: "+fov;
+		}			
 
 		// Reset direction
 		else if (e.keyCode == Qt.Key_R)
 		{
+			var transform = voidentity.placeable.transform;
+			transform.rot.y = 0;
+			voidentity.placeable.transform = transform;
 			sector = 0;
 			angle = 0;
 			compass_angle = -angle;
-			compass.setRotation(compass_angle);
-			//this.statusWidget("0/360");
+			compass.setRotation(compass_angle);			
 			widget3.text = "Sector: "+sector;
-			widget4.text = angle;
+			widget4.text = "Bearing: " +parseInt(angle);
 			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
 		}
 		
@@ -387,6 +389,7 @@ var MasterClient = Class.extend
 	// Handler for mouse x axis relative movement
 	HandleMouseLookX: function(param)
 	{
+		//widget5.text = param;
 		var transform = voidentity.placeable.transform;
 		transform.rot.y -= _g.rotate.sensitivity * parseInt(param);
 		voidentity.placeable.transform = transform;
@@ -399,7 +402,7 @@ var MasterClient = Class.extend
 		compass_angle = -angle;
 		compass.setRotation(compass_angle);
 		//this.statusWidget(angle);
-		widget4.text = angle;
+		widget4.text = "Bearing: " +angle.toFixed(2);
 		//Log(angle);
 	},
 
@@ -432,19 +435,6 @@ var MasterClient = Class.extend
 		/**/
 	},
 	
-	statusWidget2: function(message, row){
-		if (typeof(row)==='undefined') 
-			row=0;
-		label2.indent = 10;
-		label2.text = message;
-		label2.setStyleSheet("QLabel {background-color: white; color: blue; font-size: 26px; }");
-		proxy.x = 10;
-		proxy.y = 230+row*20;
-		proxy.windowFlags = 0;
-		proxy.visible = true;
-		/**/
-	},	
-
 	drawCompass: function()
 	{
 		var pixmap_compass = new QPixmap(asset.GetAsset("compassd.png").DiskSource());
