@@ -24,6 +24,7 @@ var widget2 = new QLabel();
 var widget3 = new QLabel();
 var widget4 = new QLabel();
 var widget5 = new QLabel();
+var mouselook = false;
 
 
 var _g =
@@ -215,46 +216,62 @@ var MasterClient = Class.extend
 		// forward
 		if (e.keyCode == Qt.Key_W)
 		{
-			//_g.move.amount.z = -1;
-			_g.move.amount.z = -Math.cos(radians);
-			_g.move.amount.x = Math.sin(radians);
+			if (mouselook)
+				_g.move.amount.z = -1;
+			else
+			{
+				_g.move.amount.z = -Math.cos(radians);
+				_g.move.amount.x = Math.sin(radians);
+			}
 		}
 		
 		// backward
 		else if (e.keyCode == Qt.Key_S)
 		{
-			//_g.move.amount.z = 1;
-			_g.move.amount.z = Math.cos(radians);
-			_g.move.amount.x = -Math.sin(radians);
+			if (mouselook)
+				_g.move.amount.z = 1;
+			else
+			{
+				_g.move.amount.z = Math.cos(radians);
+				_g.move.amount.x = -Math.sin(radians);
+			}
 		}
 		
 		// right
 		else if (e.keyCode == Qt.Key_D)
 		{
-			//_g.move.amount.x = 1;
-			_g.move.amount.z = Math.sin(radians);
-			_g.move.amount.x = Math.cos(radians);
-			angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
-			if (angle > 360)
-				angle -= 360;
-			compass_angle = -angle;
-			compass.setRotation(compass_angle);
-			//this.statusWidget(-angle);
-			widget4.text = "Bearing: " +(angle).toFixed(2);
+			if (mouselook)
+				_g.move.amount.x = 1;
+			else
+			{
+				_g.move.amount.z = Math.sin(radians);
+				_g.move.amount.x = Math.cos(radians);
+				angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
+				if (angle > 360)
+					angle -= 360;
+				compass_angle = -angle;
+				compass.setRotation(compass_angle);
+				//this.statusWidget(-angle);
+				widget4.text = "Bearing: " +(angle).toFixed(2);
+			}
 		}
 		
 		// left
 		else if (e.keyCode == Qt.Key_A)
 		{
-			//_g.move.amount.x = -1;
-			_g.move.amount.z = -Math.sin(radians);
-			_g.move.amount.x = -Math.cos(radians);
-			angle-=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
-			if (angle < 0)
-				angle += 360;
-			compass_angle = -angle;
-			compass.setRotation(compass_angle);
-			widget4.text = "Bearing: " + (angle).toFixed(2);
+			if (mouselook)
+				_g.move.amount.x = -1;
+			else
+			{
+				_g.move.amount.z = -Math.sin(radians);
+				_g.move.amount.x = -Math.cos(radians);
+				angle-=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
+				if (angle < 0)
+					angle += 360;
+				compass_angle = -angle;
+				compass.setRotation(compass_angle);
+				widget4.text = "Bearing: " + (angle).toFixed(2);
+			}
 		}
 		
 		// up
@@ -380,14 +397,18 @@ var MasterClient = Class.extend
 	// Handler for mouse events
 	HandleMouse: function(e)
 	{
+		//widget2.text = (e.GetEventType() == 4);
 		//this.statusWidget(e.relativeX);
 		if (e.IsButtonDown(2) && !input.IsMouseCursorVisible())
 		{
+			mouselook = true;
 			if (e.relativeX != 0)
 				this.HandleMouseLookX(e.relativeX);
 			if (e.relativeY != 0)
 				this.HandleMouseLookY(e.relativeY);
 		}
+		else if (e.GetEventType() == 4)
+			mouselook = false;
 	},
 
 	// Handler for mouse x axis relative movement
