@@ -5,6 +5,9 @@
 // !ref: server.js
 // !ref: masterclient.js
 // !ref: slaveclients.js
+// !ref: compassd.png
+// !ref: needle.png
+// !ref: arrow3b.png
 */
 
 engine.IncludeFile("helpers.js");

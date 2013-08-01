@@ -68,6 +68,8 @@ var MasterClient = Class.extend
 		
 		// Signals
 		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
+		//voidentity.Action("ChangeFovMsg").Triggered.connect(this, this.ChangeFov);
+		//voidentity.Action("ChangeFovMsg").Triggered.connect(function() {widget5.text = "Field of vision: "+fov;});
 		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
 		
 	},
@@ -75,10 +77,8 @@ var MasterClient = Class.extend
 	setWidgetLayout: function()
 	{
 		var layout = new QVBoxLayout();
-		//var mainWidget = new QWidget();
 		mainWidget.setLayout(layout);
-		//var widget1 = new QLabel();
-		//var widget2 = new QLabel();
+		mainWidget.setFixedWidth(250);
 		layout.addWidget(widget1, 0, 1);
 		layout.addWidget(widget2, 0, 1);
 		layout.addWidget(widget3, 0, 1);
@@ -97,14 +97,13 @@ var MasterClient = Class.extend
 		proxy.y = 10;
 		proxy.x = rect.width()-mainWidget.width-10;
 		mainWidget.setWindowOpacity(0.3);
-		//widget1.text = mainWidget.width;
-		//widget2.text = rect.width();
 	},
 	
 	ChangeForwardDirection: function(sector)
 	{
 		ui.GraphicsScene().removeItem(arrow);
-		if ((parseInt(sector)+1) == 1) // MasterClient's ID
+		var ID = parseInt(sector)+1;
+		if (ID == 1) // if MasterClient
 		{
 			//ui.GraphicsScene().addPixmap(pixmap_arrow);
 			this.drawForwardIndicator();
@@ -113,13 +112,14 @@ var MasterClient = Class.extend
 		}
 		else
 			//this.statusWidget("Kulkusuunta client"+sector+":llä");
-			widget2.text = "Direction of travel: client"+sector;
+			widget2.text = "Direction of travel: client"+ID;
 	},
 	
 	windowResized: function(rect)
 	{
 		//this.statusWidget(rect.width());
-		arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
+		if (!arrow.isNull)
+			arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
 		proxy.x = rect.width()-mainWidget.width-10;
 	},
 	
@@ -301,6 +301,7 @@ var MasterClient = Class.extend
 			fov += 2.5;
 			mastercamera.verticalFov = fov;
 			widget5.text = "Field of vision: "+fov;
+			voidentity.Exec(4, "ChangeFovMsg", fov);	// 4=peers
 		}
 		
 		// minor increse vertical fov
@@ -309,6 +310,7 @@ var MasterClient = Class.extend
 			fov += 0.25;
 			mastercamera.verticalFov = fov;
 			widget5.text = "Field of vision: "+fov;
+			voidentity.Exec(4, "ChangeFovMsg", fov);
 		}		
 		
 		// decrease vertical fov
@@ -317,6 +319,7 @@ var MasterClient = Class.extend
 			fov -= 2.5;
 			mastercamera.verticalFov = fov;
 			widget5.text = "Field of vision: "+fov;
+			voidentity.Exec(4, "ChangeFovMsg", fov);
 		}
 		
 		// minor decrease vertical fov
@@ -325,6 +328,7 @@ var MasterClient = Class.extend
 			fov -= 0.25;
 			mastercamera.verticalFov = fov;
 			widget5.text = "Field of vision: "+fov;
+			voidentity.Exec(5, "ChangeFovMsg", fov);
 		}			
 
 		// Reset direction
@@ -438,6 +442,7 @@ var MasterClient = Class.extend
 	drawCompass: function()
 	{
 		var pixmap_compass = new QPixmap(asset.GetAsset("compassd.png").DiskSource());
+		//var pixmap_compass = new QPixmap(asset.GetAsset("local://compassd.png").DiskSource());
 		var pixmap_needle = new QPixmap(asset.GetAsset("needle.png").DiskSource());
 		//var pixmap = ui.GraphicsScene().addPixmap(pixmap_compass);
 		compass = ui.GraphicsScene().addPixmap(pixmap_compass);
@@ -457,6 +462,7 @@ var MasterClient = Class.extend
 	{
 		//var pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
 		pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
+		//pixmap_arrow = new QPixmap(asset.GetAsset("local://arrow3b.png").DiskSource());
 		//var arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
 		arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
 		//arrow.setPos(resolution.width()/2-(135/2),resolution.height()-pixmap_arrow.height());
