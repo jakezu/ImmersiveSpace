@@ -64,22 +64,16 @@ var SlaveClient = Class.extend
 	
 	setParentEntityRef: function(attribute)
 	{
-		//var entity = scene.GetEntityById(attribute);
-		var component = slaveclient.GetComponent("EC_Placeable");
-		//slaveclient.placeable.SetParent(attribute, preserveWorldTransform=false);
-		//slaveclient.placeable.SetParent(entity, preserveWorldTransform=false);
-		//component.SetAttribute("Parent entity ref", parseInt(attribute));
-		//var attrib = component.GetAttribute("Parent entity ref");
-		//var attrib = component.GetAttribute("name");
-		//var attrib = slaveclient.placeable.GetAttribute("name");
-		//attrib.SetAttribute("value", attribute);
-		widget2.text = slaveclient.components["EC_Placeable"].GetAttribute("Parent entity ref");
+		var entity = scene.GetEntityRaw(attribute.value);
+		widget2.text = "Parent entity reference: " + entity.name;
+		slaveclient.placeable.SetParent(entity, preserveWorldTransform=false);
 	},
 
 	ChangeFov: function(fov)
 	{
 		slavecamera.verticalFov = fov;
-		widget5.text = "Field of vision: "+fov.toFixed(2);
+		//widget5.text = "Field of vision: "+fov.toFixed(2);
+		widget5.text = "Field of vision: "+fov;
 	},
 	
 	windowResized: function(rect)

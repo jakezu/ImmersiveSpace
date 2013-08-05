@@ -69,18 +69,13 @@ var MasterClient = Class.extend
 		// Signals
 		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
 		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
-		
-		//var voidentity = scene.GetEntityByName("Void");
-        //var component = gameObject.GetComponent("EC_DynamicComponent");
         masterclient.placeable.AttributeChanged.connect(this, this.ParentEntityRefChanged);	
-		
 	},
 	
 	ParentEntityRefChanged: function(attribute)
 	{
-		voidentity.Exec(4, "ChangeParentEntityRefMsg", attribute.value);
-		widget2.text = "Parent entity reference changed: " + attribute.value
-		//widget2.text = attribute.value + ": " + (attribute.name == "Parent entity ref");
+		voidentity.Exec(5, "ChangeParentEntityRefMsg", attribute);
+		widget2.text = "Parent entity reference: " + (scene.GetEntityRaw(attribute.value)).name;
 	},
 	
 	setWidgetLayout: function()
@@ -186,7 +181,7 @@ var MasterClient = Class.extend
 	{
 		var void_placeable = voidentity.placeable;
 		var void_transform = void_placeable.transform;
-		void_transform.pos = new float3(0, 1, 0);
+		void_transform.pos = new float3(0, 10, 0);
 		voidentity.placeable.transform = void_transform;
 	},
 	
