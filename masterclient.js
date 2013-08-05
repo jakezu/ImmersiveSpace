@@ -7,8 +7,9 @@ engine.ImportExtension("qt.webkit");
 
 // Globals
 var _p = null;
+var masterclient;
 var mastercamera;
-var fov = 38.5;
+var fov = 38.5; // Field of vision (45 = default, 38.5 is good in one particular setup)
 var sector = 0;
 var voidentity = scene.GetEntityByName("Void");
 var compass = new QPixmap();
@@ -37,7 +38,8 @@ var _g =
 	},
 	move :
 	{
-		sensitivity : 20.0,
+		sensitivity : 10.0,
+		//sensitivity : 20.0,
 		amount : new float3(0,0,0)
 	},
 	motion : new float3(0,0,0),
@@ -56,23 +58,29 @@ var MasterClient = Class.extend
 		widget1.text = "Client1 (MasterClient)";
 
 		this.setWidgetLayout();
-
 		this.removeFreeLookCamera();
 		this.createMasterClient();
 		this.setMasterCamera();
 		this.setSpawnPoint();
 		this.createInputHandler();
-		//this.statusWidget();
-		//this.statusWidget2();
 		this.drawCompass();
 		this.drawForwardIndicator();
 		
 		// Signals
 		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
-		//voidentity.Action("ChangeFovMsg").Triggered.connect(this, this.ChangeFov);
-		//voidentity.Action("ChangeFovMsg").Triggered.connect(function() {widget5.text = "Field of vision: "+fov;});
 		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
 		
+		//var voidentity = scene.GetEntityByName("Void");
+        //var component = gameObject.GetComponent("EC_DynamicComponent");
+        masterclient.placeable.AttributeChanged.connect(this, this.ParentEntityRefChanged);	
+		
+	},
+	
+	ParentEntityRefChanged: function(attribute)
+	{
+		voidentity.Exec(4, "ChangeParentEntityRefMsg", attribute.value);
+		widget2.text = "Parent entity reference changed: " + attribute.value
+		//widget2.text = attribute.value + ": " + (attribute.name == "Parent entity ref");
 	},
 	
 	setWidgetLayout: function()
@@ -88,11 +96,11 @@ var MasterClient = Class.extend
         layout.setContentsMargins(10,0,10,5);
         layout.setSpacing(2);
 		proxy = ui.AddWidgetToScene(mainWidget);
-		//proxy.windowFlags = Qt.Widget;
 		//mainWidget.setStyleSheet("QLabel {background-color: transparent; color: black; font-size: 16px; opacity: 0,2;}");
 		mainWidget.setStyleSheet("QLabel {color: black; font-size: 14px;}");
 		widget1.setStyleSheet("QLabel {color: blue; font-size: 18px; font-weight: bold;}");
 		rect = ui.GraphicsScene().sceneRect;
+		//proxy.windowFlags = Qt.Widget;
 		proxy.windowFlags = 0;
 		proxy.visible = true;
 		proxy.y = 10;
@@ -106,19 +114,15 @@ var MasterClient = Class.extend
 		var ID = parseInt(sector)+1;
 		if (ID == 1) // if MasterClient
 		{
-			//ui.GraphicsScene().addPixmap(pixmap_arrow);
 			this.drawForwardIndicator();
-			//this.statusWidget("Kulkusuunta");
 			widget2.text = "Direction of travel";
 		}
 		else
-			//this.statusWidget("Kulkusuunta client"+sector+":llä");
 			widget2.text = "Direction of travel: client"+ID;
 	},
 	
 	windowResized: function(rect)
 	{
-		//this.statusWidget(rect.width());
 		if (!arrow.isNull)
 			arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
 		proxy.x = rect.width()-mainWidget.width-10;
@@ -130,13 +134,6 @@ var MasterClient = Class.extend
 		var gscene = ui.GraphicsScene().scene();
 		gscene.sceneRectChanged.connect(widg, widg.WindowResized);		
 	},
-	
-	/*
-	WindowResizeListener: function(ui.GraphicsScene(), callbackFunction)
-	{
-		ui.GraphicsScene().sceneRectChanged.connect(ui.GraphicsScene(), ui.GraphicsScene.WindowResized);
-	},
-	*/
 	
 	Update: function(frametime)
 	{
@@ -163,10 +160,10 @@ var MasterClient = Class.extend
 	{
 		masterclient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
 
-		masterclient.SetName("MasterClient");
+		//masterclient.SetName("MasterClient");
+		masterclient.SetName("MasterCamera");
 		masterclient.SetTemporary(true);
 		var placeable = masterclient.placeable;
-		//var voidentity = scene.GetEntityByName("Void");
 		
 		// set parenting reference to the Server's Void-entity
 		placeable.SetParent(voidentity, preserveWorldTransform=false);
@@ -177,13 +174,11 @@ var MasterClient = Class.extend
 	// Set MasterCamera parameters
 	setMasterCamera: function()
 	{
-		//var mastercamera = masterclient.camera;
 		mastercamera = masterclient.camera;
 		
-		// Field of vision (45 = default, 38.5 is good in one particular setup)
-		mastercamera.verticalFov = 38.5;
+		mastercamera.verticalFov = fov;
 		mastercamera.SetActive();
-		widget5.text = "Field of vision: "+fov;
+		widget5.text = "Field of vision: "+fov.toFixed(2);
 	},
 	
 	// Set initial spawn point
@@ -191,7 +186,7 @@ var MasterClient = Class.extend
 	{
 		var void_placeable = voidentity.placeable;
 		var void_transform = void_placeable.transform;
-		void_transform.pos = new float3(0, 20, 0);
+		void_transform.pos = new float3(0, 1, 0);
 		voidentity.placeable.transform = void_transform;
 	},
 	
@@ -209,14 +204,13 @@ var MasterClient = Class.extend
 	// Handler for key press commands 
 	HandleKeyPress: function(e)
 	{
-		//var radians = (sector-1)*60*Math.PI/180;
-		//var radians = -angle*Math.PI/180;
-		var radians = angle*Math.PI/180;
+		var radians = (sector)*60*Math.PI/180;
+		//var radians = angle*Math.PI/180;
 		
 		// forward
 		if (e.keyCode == Qt.Key_W)
 		{
-			if (mouselook)
+			if (mouselook && sector == 0)
 				_g.move.amount.z = -1;
 			else
 			{
@@ -228,7 +222,7 @@ var MasterClient = Class.extend
 		// backward
 		else if (e.keyCode == Qt.Key_S)
 		{
-			if (mouselook)
+			if (mouselook && sector == 0)
 				_g.move.amount.z = 1;
 			else
 			{
@@ -240,26 +234,25 @@ var MasterClient = Class.extend
 		// right
 		else if (e.keyCode == Qt.Key_D)
 		{
-			if (mouselook)
+			if (mouselook && sector == 0)
 				_g.move.amount.x = 1;
 			else
 			{
 				_g.move.amount.z = Math.sin(radians);
 				_g.move.amount.x = Math.cos(radians);
-				angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
-				if (angle > 360)
-					angle -= 360;
-				compass_angle = -angle;
-				compass.setRotation(compass_angle);
-				//this.statusWidget(-angle);
-				widget4.text = "Bearing: " +(angle).toFixed(2);
 			}
+			angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
+			if (angle > 360)
+				angle -= 360;
+			compass_angle = -angle;
+			compass.setRotation(compass_angle);
+			widget4.text = "Bearing: " +(angle).toFixed(2);
 		}
 		
 		// left
 		else if (e.keyCode == Qt.Key_A)
 		{
-			if (mouselook)
+			if (mouselook && sector == 0)
 				_g.move.amount.x = -1;
 			else
 			{
@@ -315,36 +308,36 @@ var MasterClient = Class.extend
 		// increse vertical fov
 		else if (e.keyCode == Qt.Key_Insert)
 		{
-			fov += 2.5;
+			fov += 1.0;
 			mastercamera.verticalFov = fov;
-			widget5.text = "Field of vision: "+fov;
+			widget5.text = "Field of vision: "+fov.toFixed(2);
 			voidentity.Exec(4, "ChangeFovMsg", fov);	// 4=peers
 		}
 		
 		// minor increse vertical fov
 		else if (e.keyCode == Qt.Key_Home)
 		{
-			fov += 0.25;
+			fov += 0.05;
 			mastercamera.verticalFov = fov;
-			widget5.text = "Field of vision: "+fov;
+			widget5.text = "Field of vision: "+fov.toFixed(2);
 			voidentity.Exec(4, "ChangeFovMsg", fov);
 		}		
 		
 		// decrease vertical fov
 		else if (e.keyCode == Qt.Key_Delete)
 		{
-			fov -= 2.5;
+			fov -= 1.0;
 			mastercamera.verticalFov = fov;
-			widget5.text = "Field of vision: "+fov;
+			widget5.text = "Field of vision: "+fov.toFixed(2);
 			voidentity.Exec(4, "ChangeFovMsg", fov);
 		}
 		
 		// minor decrease vertical fov
 		else if (e.keyCode == Qt.Key_End)
 		{
-			fov -= 0.25;
+			fov -= 0.05;
 			mastercamera.verticalFov = fov;
-			widget5.text = "Field of vision: "+fov;
+			widget5.text = "Field of vision: "+fov.toFixed(2);
 			voidentity.Exec(5, "ChangeFovMsg", fov);
 		}			
 
@@ -369,27 +362,21 @@ var MasterClient = Class.extend
 	HandleKeyRelease: function(e)
 	{
 	
-	//if (e.keyCode == Qt.Key_W && _g.move.amount.z == -1)
 	if (e.keyCode == Qt.Key_W && _g.move.amount.z != 0 )
 		_g.move.amount = new float3(0,0,0);
 	
-	//else if (e.keyCode == Qt.Key_S && _g.move.amount.z == 1)
 	else if (e.keyCode == Qt.Key_S && _g.move.amount.z != 0)
 		_g.move.amount = new float3(0,0,0);
 	
-	//else if (e.keyCode == Qt.Key_D && _g.move.amount.x == 1)
 	else if (e.keyCode == Qt.Key_D && _g.move.amount.x != 0)
 		_g.move.amount = new float3(0,0,0);
 		
-	//else if (e.keyCode == Qt.Key_A && _g.move.amount.x == -1)
 	else if (e.keyCode == Qt.Key_A && _g.move.amount.x != 0)
 		_g.move.amount = new float3(0,0,0);
 	
-	//else if (e.keyCode == Qt.Key_Space && _g.move.amount.y == 1)
 	else if (e.keyCode == Qt.Key_Space && _g.move.amount.y != 0)
 		_g.move.amount = new float3(0,0,0);
 		
-	//else if (e.keyCode == Qt.Key_C && _g.move.amount.y == -1)
 	else if (e.keyCode == Qt.Key_C && _g.move.amount.y != 0)
 		_g.move.amount = new float3(0,0,0);
 	},
@@ -397,8 +384,6 @@ var MasterClient = Class.extend
 	// Handler for mouse events
 	HandleMouse: function(e)
 	{
-		//widget2.text = (e.GetEventType() == 4);
-		//this.statusWidget(e.relativeX);
 		if (e.IsButtonDown(2) && !input.IsMouseCursorVisible())
 		{
 			mouselook = true;
@@ -414,7 +399,6 @@ var MasterClient = Class.extend
 	// Handler for mouse x axis relative movement
 	HandleMouseLookX: function(param)
 	{
-		//widget5.text = param;
 		var transform = voidentity.placeable.transform;
 		transform.rot.y -= _g.rotate.sensitivity * parseInt(param);
 		voidentity.placeable.transform = transform;
@@ -426,9 +410,7 @@ var MasterClient = Class.extend
 			angle += _g.rotate.sensitivity * parseInt(param);
 		compass_angle = -angle;
 		compass.setRotation(compass_angle);
-		//this.statusWidget(angle);
 		widget4.text = "Bearing: " +angle.toFixed(2);
-		//Log(angle);
 	},
 
 	// Handler for mouse y axis relative movement
@@ -436,10 +418,7 @@ var MasterClient = Class.extend
 	{
 		var transform = voidentity.placeable.transform;
 		var radians = (sector-1)*60*Math.PI/180;
-		//transform.rot.x -= _g.rotate.sensitivity * parseInt(param);
 		transform.rot.x -= _g.rotate.sensitivity * parseInt(param);
-		//transform.rot.y += _g.rotate.sensitivity * parseInt(param);
-		//_g.move.amount.z = -Math.cos(radians);
 		if (transform.rot.x > 90.0)
 			transform.rot.x = 90.0;
 		if (transform.rot.x < -90.0)
@@ -463,44 +442,18 @@ var MasterClient = Class.extend
 	drawCompass: function()
 	{
 		var pixmap_compass = new QPixmap(asset.GetAsset("compassd.png").DiskSource());
-		//var pixmap_compass = new QPixmap(asset.GetAsset("local://compassd.png").DiskSource());
 		var pixmap_needle = new QPixmap(asset.GetAsset("needle.png").DiskSource());
-		//var pixmap = ui.GraphicsScene().addPixmap(pixmap_compass);
 		compass = ui.GraphicsScene().addPixmap(pixmap_compass);
 		var needle = ui.GraphicsScene().addPixmap(pixmap_needle);
 		compass.setTransformOriginPoint(pixmap_compass.height()/2, pixmap_compass.width()/2);
-		//pixmap.setRotation(90);
-
-	},
-	
-	rotateCompass: function(angle)
-	{
-		pixmap.setRotation(angle);
-		pixmap.setRotation(angle+90);
 	},
 	
 	drawForwardIndicator: function(angle)
 	{
-		//var pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
 		pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
-		//pixmap_arrow = new QPixmap(asset.GetAsset("local://arrow3b.png").DiskSource());
-		//var arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
 		arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
-		//arrow.setPos(resolution.width()/2-(135/2),resolution.height()-pixmap_arrow.height());
 		rect = ui.GraphicsScene().sceneRect;
 		arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
-	},
-	
-	createHUD2: function()
-	{
-		var uiplane = renderer.CreateUiPlane("HUD");
-		//uiplane.SetTexture(asset.GetAsset("compassb.png"));
-		uiplane.SetTexture(asset.GetAsset("HiRes2.png"));
-		//uiplane.SetTexture(asset.GetAsset("Compass_Rose.jpg"));
-		uiplane.Show();
-		uiplane.SetWidth(200, true);
-		uiplane.SetHeight(200, true);	
-		uiplane.SetRotation(45);
 	},
 	
 	// Remove FreeLookCamera from the scene
