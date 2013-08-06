@@ -25,6 +25,9 @@ var widget2 = new QLabel();
 var widget3 = new QLabel();
 var widget4 = new QLabel();
 var widget5 = new QLabel();
+var block_size = 0;
+var block_a = new QGraphicsPolygonItem();
+var block_b = new QGraphicsPolygonItem();
 var mouselook = false;
 
 
@@ -68,14 +71,21 @@ var MasterClient = Class.extend
 		
 		// Signals
 		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
+		voidentity.Action("MoveCamerasMsg").Triggered.connect(this, this.MoveCameras);
+		voidentity.Action("ResetCamerasMsg").Triggered.connect(this, this.ResetCameras);
+		voidentity.Action("LetterBoxMsg").Triggered.connect(this, this.LetterBox);
 		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
         masterclient.placeable.AttributeChanged.connect(this, this.ParentEntityRefChanged);	
 	},
 	
 	ParentEntityRefChanged: function(attribute)
 	{
-		voidentity.Exec(5, "ChangeParentEntityRefMsg", attribute);
-		widget2.text = "Parent entity reference: " + (scene.GetEntityRaw(attribute.value)).name;
+		widget4.text = attribute.name;
+		if (attribute.name === "Parent entity ref")
+		{
+			voidentity.Exec(4, "ChangeParentEntityRefMsg", attribute.value);
+			widget2.text = "Parent entity reference: " + (scene.GetEntityRaw(attribute.value)).name;
+		}
 	},
 	
 	setWidgetLayout: function()
@@ -101,6 +111,78 @@ var MasterClient = Class.extend
 		proxy.y = 10;
 		proxy.x = rect.width()-mainWidget.width-10;
 		mainWidget.setWindowOpacity(0.3);
+	},
+	
+	LetterBox: function(size) 
+	{
+		ui.GraphicsScene().removeItem(block_a);
+		ui.GraphicsScene().removeItem(block_b);
+		if (size!=0)
+		{
+			var color = new QColor("black");
+			var mainwin = ui.MainWindow();
+			var height = mainwin.size.height();
+			var width = mainwin.size.width();
+			
+			var point_a1 = new QPointF(0,0);
+			var point_a2 = new QPointF(size,0);
+			var point_a3 = new QPointF(size,height);
+			var point_a4 = new QPointF(0,height);
+			var points_a = new Array(point_a1, point_a2, point_a3, point_a4);
+			var qpoly_a = new QPolygon(points_a);
+			var poly_a = new QPolygonF(qpoly_a);
+			
+			var point_b1 = new QPointF(width,0);
+			var point_b2 = new QPointF(width-size,0);
+			var point_b3 = new QPointF(width-size,height);
+			var point_b4 = new QPointF(width,height);
+			var points_b = new Array(point_b1, point_b2, point_b3, point_b4);
+			var qpoly_b = new QPolygon(points_b);
+			var poly_b = new QPolygonF(qpoly_b);
+			
+			block_a = new QGraphicsPolygonItem(poly_a, 0, scene);	
+			block_b = new QGraphicsPolygonItem(poly_b, 0, scene);	
+			block_a.setBrush(color);
+			block_b.setBrush(color);
+			block_a.setOpacity(1.0);
+			block_b.setOpacity(1.0);
+			ui.GraphicsScene().addItem(block_a);
+			ui.GraphicsScene().addItem(block_b);
+		}
+	},
+	
+	MoveCameras: function(param)
+	{
+		trans = masterclient.placeable.transform;
+		var radians = sector*60*Math.PI/180;
+
+		if (param == "forward") 
+		{
+			trans.pos.z -= Math.cos(radians);    
+			trans.pos.x += Math.sin(radians);    
+			masterclient.placeable.transform = trans;
+		}
+		else if (param == "backward") 
+		{
+			trans.pos.z += Math.cos(radians);    
+			trans.pos.x -= Math.sin(radians);    
+			masterclient.placeable.transform = trans; 
+		}
+		widget2.text = "Camera new z position: "+(-trans.pos.z);
+		mastercamera.SetActive();
+	},
+	
+	ResetCameras: function()
+	{
+		//var camera = scene.GetEntityByName("ClientCamera");
+		//trans = camera.placeable.transform;
+		trans = masterclient.placeable.transform;
+		trans.pos.z = 0;
+		trans.pos.x = 0;
+		masterclient.placeable.transform = trans; 
+		mastercamera.SetActive();
+		//debug("Z: "+(-trans.pos.z));
+		widget2.text = "Cameras' positions reseted";
 	},
 	
 	ChangeForwardDirection: function(sector)
@@ -337,7 +419,7 @@ var MasterClient = Class.extend
 		}			
 
 		// Reset direction
-		else if (e.keyCode == Qt.Key_R)
+		else if (e.keyCode == Qt.Key_N)
 		{
 			var transform = voidentity.placeable.transform;
 			transform.rot.y = 0;
@@ -350,6 +432,32 @@ var MasterClient = Class.extend
 			widget4.text = "Bearing: " +parseInt(angle);
 			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
 		}
+		
+		// Move cameras forward
+		else if (e.keyCode == Qt.Key_PageUp)
+			voidentity.Exec(5, "MoveCamerasMsg", "forward");
+		
+		// Move cameras backward
+		else if (e.keyCode == Qt.Key_PageDown)
+			voidentity.Exec(5, "MoveCamerasMsg", "backward");
+		
+		// Reset cameras positions
+		else if (e.keyCode == Qt.Key_R)
+			voidentity.Exec(5, "ResetCamerasMsg");
+		
+		// Increase black block size
+		else if (e.keyCode == Qt.Key_L)
+		{
+			block_size += 5;
+			voidentity.Exec(5, "LetterBoxMsg", block_size);
+		}
+
+		// Reset black block size
+		else if (e.keyCode == Qt.Key_K)
+		{
+			block_size = 0;
+			voidentity.Exec(5, "LetterBoxMsg", block_size);
+		}		
 		
 	},
 	
