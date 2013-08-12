@@ -16,6 +16,7 @@ var compass = new QPixmap();
 var pixmap_arrow = new QPixmap();
 var arrow = new QPixmap();
 var angle = 0;
+var panning = 0;
 var compass_angle = 0;
 var distance_to_north = 10000;
 var proxy = new UiProxyWidget();
@@ -74,6 +75,7 @@ var MasterClient = Class.extend
 		voidentity.Action("MoveCamerasMsg").Triggered.connect(this, this.MoveCameras);
 		voidentity.Action("ResetCamerasMsg").Triggered.connect(this, this.ResetCameras);
 		voidentity.Action("LetterBoxMsg").Triggered.connect(this, this.LetterBox);
+		voidentity.Action("_MSG_MOVING_MODE").Triggered.connect(this, this.LetterBox);
 		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
         masterclient.placeable.AttributeChanged.connect(this, this.ParentEntityRefChanged);	
 	},
@@ -282,12 +284,21 @@ var MasterClient = Class.extend
 	HandleKeyPress: function(e)
 	{
 		var radians = (sector)*60*Math.PI/180;
+		//var radians2 = (Math.abs(panning)/(rect.width()/2))*60*Math.PI/180;
+		var radians2 = (panning/(rect.width()/2))*60*Math.PI/180;
 		//var radians = angle*Math.PI/180;
 		
 		// forward
 		if (e.keyCode == Qt.Key_W)
 		{
-			if (mouselook && sector == 0)
+			if (panning != 0)
+			{
+				_g.move.amount.z = -Math.cos(radians2);
+				_g.move.amount.x = Math.sin(radians2);
+				widget5.text = radians2;
+			}
+			//if (mouselook && sector == 0)
+			else if (mouselook && sector == 0)
 				_g.move.amount.z = -1;
 			else
 			{
@@ -457,8 +468,15 @@ var MasterClient = Class.extend
 		{
 			block_size = 0;
 			voidentity.Exec(5, "LetterBoxMsg", block_size);
-		}		
-		
+		}
+
+		// Moving mode: mode1
+		else if (e.keyCode == Qt.Key_1)
+			voidentity.Exec(5, "_MSG_MOVING_MODE", "mode1");
+
+		// Moving mode: mode2
+		else if (e.keyCode == Qt.Key_2)
+			voidentity.Exec(5, "_MSG_MOVING_MODE", "mode2");
 	},
 	
 	// Handler for key release commands
@@ -495,6 +513,9 @@ var MasterClient = Class.extend
 			if (e.relativeY != 0)
 				this.HandleMouseLookY(e.relativeY);
 		}
+		else if (e.IsButtonDown(1))
+			this.HandleMousePan(e.relativeX)
+		
 		else if (e.GetEventType() == 4)
 			mouselook = false;
 	},
@@ -529,7 +550,23 @@ var MasterClient = Class.extend
 		voidentity.placeable.transform = transform;
 	},
 	
-	statusWidget: function(message, row){
+	HandleMousePan: function(param)
+	{
+		if (Math.abs(panning+param) < rect.width()/2)
+		{
+			if (param<0 && panning<75 && panning>0)
+				panning = 0;
+			else if (param>0 && panning>-75 && panning<0)
+				panning = 0;
+			else
+				panning += param;
+		}
+		widget4.text = "Panning: " +panning.toFixed(2);
+		arrow.setPos(rect.width()/2-(135/2)+panning,rect.height()-pixmap_arrow.height());
+	},
+	
+	statusWidget: function(message, row)
+	{
 		if (typeof(row)==='undefined') 
 			row=0;
 		label.indent = 10;
