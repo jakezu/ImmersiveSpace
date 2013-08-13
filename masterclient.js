@@ -29,6 +29,7 @@ var widget5 = new QLabel();
 var block_size = 0;
 var block_a = new QGraphicsPolygonItem();
 var block_b = new QGraphicsPolygonItem();
+var arrow2 = new QGraphicsPolygonItem();
 var mouselook = false;
 
 
@@ -68,7 +69,10 @@ var MasterClient = Class.extend
 		this.setSpawnPoint();
 		this.createInputHandler();
 		this.drawCompass();
-		this.drawForwardIndicator();
+		//this.drawForwardIndicator();
+		
+		//this.MidLine();
+		this.PolyArrow();
 		
 		// Signals
 		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
@@ -114,6 +118,54 @@ var MasterClient = Class.extend
 		proxy.x = rect.width()-mainWidget.width-10;
 		mainWidget.setWindowOpacity(0.3);
 	},
+	
+	MidLine: function()
+	{
+		var mainwin = ui.MainWindow();
+		var height = mainwin.size.height();
+		var width = mainwin.size.width();	
+		var point_a1 = new QPointF(width/2,0);
+		//var point_a2 = new QPointF((width/2)+5,0);
+		//var point_a3 = new QPointF((width/2)+5,height);
+		//var point_a4 = new QPointF((width/2),height);
+		var point_a2 = new QPointF((width/2),height);
+		var points_a = new Array(point_a1, point_a2);
+		//var points_a = new Array(point_a1, point_a2, point_a3, point_a4);
+		var qpoly_a = new QPolygon(points_a);
+		var poly_a = new QPolygonF(qpoly_a);
+		block_a = new QGraphicsPolygonItem(poly_a, 0, scene);	
+		var color = new QColor("black");
+		block_a.setBrush(color);
+		block_a.setOpacity(1.0);
+		ui.GraphicsScene().addItem(block_a);		
+	},
+	
+	PolyArrow: function()
+	{
+		var mainwin = ui.MainWindow();
+		//var height = mainwin.size.height();
+		//var width = mainwin.size.width();	
+		var height = 100;
+		var width = 200;
+		var point_a1 = new QPointF(0, height);
+		var point_a2 = new QPointF((width/4),height/2);
+		var point_a3 = new QPointF(0,height/2);
+		var point_a4 = new QPointF((width/2),0);
+		var point_a5 = new QPointF(width,height/2);
+		var point_a6 = new QPointF(width-(width/4),height/2);
+		var point_a7 = new QPointF(width,height);
+		//var points_a = new Array(point_a1, point_a2);
+		var points_a = new Array(point_a1, point_a2, point_a3, point_a4, point_a5, point_a6, point_a7);
+		var qpoly_a = new QPolygon(points_a);
+		var poly_a = new QPolygonF(qpoly_a);
+		arrow2 = new QGraphicsPolygonItem(poly_a, 0, scene);	
+		var color = new QColor("blue");
+		arrow2.setBrush(color);
+		arrow2.setOpacity(0.4);
+		ui.GraphicsScene().addItem(arrow2);
+		arrow2.setPos(rect.width()/2-(200/2), rect.height()-100);
+		arrow2.setTransformOriginPoint(width/2, height/2);		
+	},	
 	
 	LetterBox: function(size) 
 	{
@@ -562,7 +614,9 @@ var MasterClient = Class.extend
 				panning += param;
 		}
 		widget4.text = "Panning: " +panning.toFixed(2);
-		arrow.setPos(rect.width()/2-(135/2)+panning,rect.height()-pixmap_arrow.height());
+		//arrow.setPos(rect.width()/2-(135/2)+panning,rect.height()-pixmap_arrow.height());
+		arrow2.setRotation((panning/rect.width())*60);
+		widget5.text = "Rotation: " +(panning/rect.width())*60;
 	},
 	
 	statusWidget: function(message, row)
@@ -585,7 +639,8 @@ var MasterClient = Class.extend
 		var pixmap_needle = new QPixmap(asset.GetAsset("needle.png").DiskSource());
 		compass = ui.GraphicsScene().addPixmap(pixmap_compass);
 		var needle = ui.GraphicsScene().addPixmap(pixmap_needle);
-		compass.setTransformOriginPoint(pixmap_compass.height()/2, pixmap_compass.width()/2);
+		//compass.setTransformOriginPoint(pixmap_compass.height()/2, pixmap_compass.width()/2);
+		compass.setTransformOriginPoint(pixmap_compass.width()/2, pixmap_compass.height()/2);
 	},
 	
 	drawForwardIndicator: function(angle)
@@ -594,6 +649,10 @@ var MasterClient = Class.extend
 		arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
 		rect = ui.GraphicsScene().sceneRect;
 		arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
+		//arrow.setTransformOriginPoint(pixmap_arrow.height()/2, pixmap_arrow.width()/2);
+		///arrow.setTransformOriginPoint(pixmap_arrow.width()/2, pixmap_arrow.height());
+		arrow.setTransformOriginPoint(pixmap_arrow.width()/2, (pixmap_arrow.height())*4);
+		//arrow.setTransformOriginPoint((pixmap_arrow.height()), (pixmap_arrow.width())/2);
 	},
 	
 	// Remove FreeLookCamera from the scene
