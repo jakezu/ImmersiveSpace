@@ -32,6 +32,8 @@ var block_b = new QGraphicsPolygonItem();
 var arrow2 = new QGraphicsPolygonItem();
 var mouselook = false;
 
+var arrow3;
+
 
 var _g =
 {
@@ -65,6 +67,7 @@ var MasterClient = Class.extend
 		this.setWidgetLayout();
 		this.removeFreeLookCamera();
 		this.createMasterClient();
+		this.createArrow();
 		this.setMasterCamera();
 		this.setSpawnPoint();
 		this.createInputHandler();
@@ -72,7 +75,7 @@ var MasterClient = Class.extend
 		//this.drawForwardIndicator();
 		
 		//this.MidLine();
-		this.PolyArrow();
+		//this.PolyArrow();
 		
 		// Signals
 		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
@@ -82,6 +85,24 @@ var MasterClient = Class.extend
 		voidentity.Action("_MSG_MOVING_MODE").Triggered.connect(this, this.LetterBox);
 		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
         masterclient.placeable.AttributeChanged.connect(this, this.ParentEntityRefChanged);	
+	},
+	
+	createArrow: function()
+	{
+		arrow3 = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh"]);
+		arrow3.mesh.meshRef = "assets/Arrow.mesh";
+		var mats = arrow3.mesh.meshMaterial;
+		mats[0] = "assets/Metal.material";
+		arrow3.mesh.meshMaterial = mats;
+		arrow3.placeable.SetPosition(0,-2,-7);
+		var trans = arrow3.placeable.transform;
+		trans.rot.y = -90;
+		trans.scale.x = 0.5;
+		trans.scale.z = 0.5;
+		trans.scale.y = 0.05;
+		arrow3.placeable.transform = trans;
+		widget2.text = arrow3.placeable.transform;
+		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
 	},
 	
 	ParentEntityRefChanged: function(attribute)
@@ -98,7 +119,8 @@ var MasterClient = Class.extend
 	{
 		var layout = new QVBoxLayout();
 		mainWidget.setLayout(layout);
-		mainWidget.setFixedWidth(250);
+		//mainWidget.setFixedWidth(250);
+		mainWidget.setFixedWidth(650);
 		layout.addWidget(widget1, 0, 1);
 		layout.addWidget(widget2, 0, 1);
 		layout.addWidget(widget3, 0, 1);
@@ -337,8 +359,8 @@ var MasterClient = Class.extend
 	{
 		var radians = (sector)*60*Math.PI/180;
 		//var radians2 = (Math.abs(panning)/(rect.width()/2))*60*Math.PI/180;
-		var radians2 = (panning/(rect.width()/2))*60*Math.PI/180;
-		//var radians = angle*Math.PI/180;
+		//var radians2 = (panning/(rect.width()/2))*60*Math.PI/180;
+		var radians2 = (panning)*Math.PI/180;
 		
 		// forward
 		if (e.keyCode == Qt.Key_W)
@@ -604,19 +626,27 @@ var MasterClient = Class.extend
 	
 	HandleMousePan: function(param)
 	{
-		if (Math.abs(panning+param) < rect.width()/2)
-		{
-			if (param<0 && panning<75 && panning>0)
-				panning = 0;
-			else if (param>0 && panning>-75 && panning<0)
-				panning = 0;
-			else
-				panning += param;
-		}
+		//panning = -90-((panning+param)/(rect.width())*30);
+		//panning = panning+(param/rect.width()*60);
+		var increase = param/rect.width()*60;
+		if (param < 0 && panning+increase < 10 && panning+increase > 0)	// snap to zero
+			panning = 0;
+		else if (param > 0 && panning+increase > 350)			// snap to zero
+			panning = 0;
+		//else if (panning+(param/rect.width()*60) < 0)
+		else if (panning+increase < 0)
+			panning = 360+increase;
+		//else if (panning+(param/rect.width()*60) > 360)
+		else if (panning+increase > 360)
+			//panning = (param/rect.width()*60);
+			panning = increase;
+		else
+			//panning = panning+(param/rect.width()*60);
+			panning = panning+increase;
 		widget4.text = "Panning: " +panning.toFixed(2);
-		//arrow.setPos(rect.width()/2-(135/2)+panning,rect.height()-pixmap_arrow.height());
-		arrow2.setRotation((panning/rect.width())*60);
-		widget5.text = "Rotation: " +(panning/rect.width())*60;
+		var trans = arrow3.placeable.transform;
+		trans.rot.y = -90-panning;
+		arrow3.placeable.transform = trans;
 	},
 	
 	statusWidget: function(message, row)

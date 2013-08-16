@@ -19,7 +19,7 @@ var widget5 = new QLabel();
 var block_size = 0;
 var block_a = new QGraphicsPolygonItem();
 var block_b = new QGraphicsPolygonItem();
-
+var arrow3;
 
 var SlaveClient = Class.extend
 ({
@@ -30,6 +30,7 @@ var SlaveClient = Class.extend
 
 		this.setWidgetLayout();
 		this.createSlaveClient();
+		this.createArrow();
 		this.setSlaveCamera();
 		this.removeFreeLookCamera();
 		
@@ -212,6 +213,29 @@ var SlaveClient = Class.extend
 		Log("**** SlaveCamera has been set and rotated by " + (client_ID-1)*60 + " degrees clockwise");
 		
 	},
+	
+	createArrow: function()
+	{
+		arrow3 = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh"]);
+		arrow3.mesh.meshRef = "assets/Arrow.mesh";
+		var mats = arrow3.mesh.meshMaterial;
+		mats[0] = "assets/Metal.material";
+		arrow3.mesh.meshMaterial = mats;
+		//arrow3.placeable.SetPosition(0,-2,-7);
+		//arrow3.placeable.SetPosition(1,-0.2,-0.5);
+		arrow3.placeable.SetPosition(50,20,60);
+		var trans = arrow3.placeable.transform;
+		//trans.rot.y = -90;
+		trans.rot.x = 0;
+		trans.rot.y = 60;
+		trans.rot.z = 0;
+		trans.scale.x = 0.5;
+		trans.scale.z = 0.5;
+		trans.scale.y = 0.05;
+		arrow3.placeable.transform = trans;
+		widget2.text = arrow3.placeable.transform;
+		arrow3.placeable.SetParent(slaveclient, preserveWorldTransform=false);
+	},	
 	
 	drawForwardIndicator: function(angle)
 	{
