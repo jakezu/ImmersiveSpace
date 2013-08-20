@@ -94,7 +94,9 @@ var MasterClient = Class.extend
 		var mats = arrow3.mesh.meshMaterial;
 		mats[0] = "assets/Metal.material";
 		arrow3.mesh.meshMaterial = mats;
-		arrow3.placeable.SetPosition(0,-2,-7);
+		//arrow3.placeable.SetPosition(0,-2,-7);
+		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
+		arrow3.placeable.SetPosition(0,-0.75,-3);
 		var trans = arrow3.placeable.transform;
 		trans.rot.y = -90;
 		trans.scale.x = 0.5;
@@ -102,7 +104,7 @@ var MasterClient = Class.extend
 		trans.scale.y = 0.05;
 		arrow3.placeable.transform = trans;
 		widget2.text = arrow3.placeable.transform;
-		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
+		//arrow3.placeable.SetParent(voidentity, preserveWorldTransform=true);
 	},
 	
 	ParentEntityRefChanged: function(attribute)
@@ -629,6 +631,7 @@ var MasterClient = Class.extend
 		//panning = -90-((panning+param)/(rect.width())*30);
 		//panning = panning+(param/rect.width()*60);
 		var increase = param/rect.width()*60;
+		var increase = param/rect.width()*120;
 		if (param < 0 && panning+increase < 10 && panning+increase > 0)	// snap to zero
 			panning = 0;
 		else if (param > 0 && panning+increase > 350)			// snap to zero

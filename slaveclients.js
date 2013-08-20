@@ -205,6 +205,7 @@ var SlaveClient = Class.extend
 		widget1.text = "Client" + client_ID + " (SlaveClient)";
 		
 		// Rotate camera by ID * 60 degrees (when rotated to clockwise, negative y-axis value is needed)
+		//transform.rot.y = -(client_ID-1) * 60;
 		transform.rot.y = -(client_ID-1) * 60;
 		placeable.transform = transform;
 		
@@ -221,20 +222,32 @@ var SlaveClient = Class.extend
 		var mats = arrow3.mesh.meshMaterial;
 		mats[0] = "assets/Metal.material";
 		arrow3.mesh.meshMaterial = mats;
+		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
 		//arrow3.placeable.SetPosition(0,-2,-7);
+		var radians = 60*Math.PI/180;
+		//arrow3.placeable.SetPosition(0,-0.75,-3);
 		//arrow3.placeable.SetPosition(1,-0.2,-0.5);
-		arrow3.placeable.SetPosition(50,20,60);
+		//arrow3.placeable.SetPosition(50,20,60);
+		//arrow3.placeable.SetPosition(7,-2,-3);
 		var trans = arrow3.placeable.transform;
+		trans.pos.z -= Math.cos(radians);    
+		trans.pos.x += Math.sin(radians);  
+		//trans.pos.y = -1;
 		//trans.rot.y = -90;
 		trans.rot.x = 0;
-		trans.rot.y = 60;
+		trans.rot.y = -60;
 		trans.rot.z = 0;
 		trans.scale.x = 0.5;
 		trans.scale.z = 0.5;
-		trans.scale.y = 0.05;
+		trans.scale.y = 0.05;		
+		/*
+		trans.scale.x = 500;
+		trans.scale.z = 500;
+		trans.scale.y = 500;
+		*/
 		arrow3.placeable.transform = trans;
 		widget2.text = arrow3.placeable.transform;
-		arrow3.placeable.SetParent(slaveclient, preserveWorldTransform=false);
+		//arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
 	},	
 	
 	drawForwardIndicator: function(angle)
