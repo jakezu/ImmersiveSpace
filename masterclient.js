@@ -69,7 +69,7 @@ var MasterClient = Class.extend
 		this.createMasterClient();
 		this.createArrow();
 		this.setMasterCamera();
-		this.setSpawnPoint();
+		//this.setSpawnPoint();
 		this.createInputHandler();
 		this.drawCompass();
 		//this.drawForwardIndicator();
@@ -96,12 +96,13 @@ var MasterClient = Class.extend
 		arrow3.mesh.meshMaterial = mats;
 		//arrow3.placeable.SetPosition(0,-2,-7);
 		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
-		arrow3.placeable.SetPosition(0,-0.75,-3);
+		//arrow3.placeable.SetPosition(0,-0.75,-3);
+		arrow3.placeable.SetPosition(0,-0.9,-3);
 		var trans = arrow3.placeable.transform;
 		trans.rot.y = -90;
-		trans.scale.x = 0.5;
-		trans.scale.z = 0.5;
-		trans.scale.y = 0.05;
+		trans.scale.x = 0.1;
+		trans.scale.z = 0.1;
+		trans.scale.y = 0.01;
 		arrow3.placeable.transform = trans;
 		widget2.text = arrow3.placeable.transform;
 		//arrow3.placeable.SetParent(voidentity, preserveWorldTransform=true);
@@ -362,7 +363,8 @@ var MasterClient = Class.extend
 		var radians = (sector)*60*Math.PI/180;
 		//var radians2 = (Math.abs(panning)/(rect.width()/2))*60*Math.PI/180;
 		//var radians2 = (panning/(rect.width()/2))*60*Math.PI/180;
-		var radians2 = (panning)*Math.PI/180;
+		//var radians2 = (panning)*Math.PI/180;
+		var radians2 = (panning)*Math.PI/360;
 		
 		// forward
 		if (e.keyCode == Qt.Key_W)
@@ -386,7 +388,13 @@ var MasterClient = Class.extend
 		// backward
 		else if (e.keyCode == Qt.Key_S)
 		{
-			if (mouselook && sector == 0)
+			if (panning != 0)
+			{
+				_g.move.amount.z = Math.cos(radians2);
+				_g.move.amount.x = -Math.sin(radians2);
+				widget5.text = radians2;
+			}		
+			else if (mouselook && sector == 0)
 				_g.move.amount.z = 1;
 			else
 			{
@@ -398,7 +406,13 @@ var MasterClient = Class.extend
 		// right
 		else if (e.keyCode == Qt.Key_D)
 		{
-			if (mouselook && sector == 0)
+			if (panning != 0)
+			{
+				_g.move.amount.z = Math.cos(radians2);
+				_g.move.amount.x = Math.sin(radians2);
+				widget5.text = radians2;
+			}		
+			else if (mouselook && sector == 0)
 				_g.move.amount.x = 1;
 			else
 			{
@@ -416,7 +430,13 @@ var MasterClient = Class.extend
 		// left
 		else if (e.keyCode == Qt.Key_A)
 		{
-			if (mouselook && sector == 0)
+			if (panning != 0)
+			{
+				_g.move.amount.z = -Math.cos(radians2);
+				_g.move.amount.x = -Math.sin(radians2);
+				widget5.text = radians2;
+			}		
+			else if (mouselook && sector == 0)
 				_g.move.amount.x = -1;
 			else
 			{
@@ -650,6 +670,7 @@ var MasterClient = Class.extend
 		var trans = arrow3.placeable.transform;
 		trans.rot.y = -90-panning;
 		arrow3.placeable.transform = trans;
+		voidentity.Exec(5, "_MSG_ROTATE_ARROW_", panning);
 	},
 	
 	statusWidget: function(message, row)
