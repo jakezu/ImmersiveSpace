@@ -73,7 +73,7 @@ var SlaveClient = Class.extend
 	RotateArrow: function(param)
 	{
 		var trans = arrow3.placeable.transform;
-		trans.rot.y = -(client_ID-1)*60-150-param;
+		trans.rot.y = -90-param;		
 		arrow3.placeable.transform = trans;
 	},
 	
@@ -233,30 +233,17 @@ var SlaveClient = Class.extend
 		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
 		//arrow3.placeable.SetPosition(0,-2,-7);
 		var radians = (client_ID - 1)*60*Math.PI/180;
-		//arrow3.placeable.SetPosition(0,-0.75,-3);
-		//arrow3.placeable.SetPosition(1,-0.2,-0.5);
-		//arrow3.placeable.SetPosition(50,20,60);
-		//arrow3.placeable.SetPosition(7,-2,-3);
 		var trans = arrow3.placeable.transform;
 		trans.pos.z = -3*Math.cos(radians);    
 		trans.pos.x = 3*Math.sin(radians);  
 		//trans.pos.y = -.25;
 		trans.pos.y = -.9;
-		//trans.rot.y = -90;
-		trans.rot.x = 0;
-		trans.rot.y = -(client_ID-1)*60-150;
-		trans.rot.z = 0;
+		trans.rot.y = -90;
 		trans.scale.x = 0.1;
 		trans.scale.z = 0.1;
 		trans.scale.y = 0.01;		
-		/*
-		trans.scale.x = 500;
-		trans.scale.z = 500;
-		trans.scale.y = 500;
-		*/
 		arrow3.placeable.transform = trans;
 		widget2.text = arrow3.placeable.transform;
-		//arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
 	},	
 	
 	drawForwardIndicator: function(angle)
