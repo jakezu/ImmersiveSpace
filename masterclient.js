@@ -104,7 +104,8 @@ var MasterClient = Class.extend
 		trans.scale.z = 0.1;
 		trans.scale.y = 0.01;
 		arrow3.placeable.transform = trans;
-		widget3.text = voidentity.placeable.WorldPosition();
+		widget3.text = voidentity.placeable.WorldOrientation();
+		//widget3.text = voidentity.mesh.WorldOBB();
 		//widget2.text = arrow3.placeable.transform;
 		//arrow3.placeable.SetParent(voidentity, preserveWorldTransform=true);
 	},
@@ -314,6 +315,8 @@ var MasterClient = Class.extend
 	// Handler for key press commands 
 	HandleKeyPress: function(e)
 	{
+	
+		var pos1 = voidentity.placeable.WorldPosition();
 		var radians = (sector)*60*Math.PI/180;
 		//var radians2 = (Math.abs(panning)/(rect.width()/2))*60*Math.PI/180;
 		//var radians2 = (panning/(rect.width()/2))*60*Math.PI/180;
@@ -529,9 +532,12 @@ var MasterClient = Class.extend
 		
 		x0 = voidentity.placeable.WorldPosition().x;
 		z0 = voidentity.placeable.WorldPosition().z;
-		widget2.text = masterclient.placeable.WorldOrientation();
+		//widget2.text = voidentity.placeable.WorldOrientation().Angle();
+		widget2.text = arrow3.placeable.Orientation();
 		//widget2.text = voidentity.placeable.WorldPosition().x.toFixed(2);
-		widget3.text = voidentity.placeable.WorldPosition().z.toFixed(2);
+		//widget3.text = voidentity.placeable.WorldPosition().z.toFixed(2);
+		//widget3.text = voidentity.placeable.WorldOrientation();
+		//widget3.text = voidentity.placeable.WorldPosition().DistanceSq(pos1);
 	},
 	
 	// Handler for key release commands
@@ -627,9 +633,11 @@ var MasterClient = Class.extend
 			panning = panning+increase;
 		widget4.text = "Panning: " +panning.toFixed(2);
 		var trans = arrow3.placeable.transform;
-		trans.rot.y = -90-panning;
+		//trans.rot.y = -90-panning;
+		trans.rot.y = -panning;
 		arrow3.placeable.transform = trans;
 		voidentity.Exec(5, "_MSG_ROTATE_ARROW_", panning);
+		widget2.text = ((arrow3.placeable.Orientation().Angle())*(180/Math.PI)).toFixed(2);
 		widget3.text = voidentity.placeable.WorldPosition();
 		//widget3.text = voidentity.placeable.transform.rot;
 	},
