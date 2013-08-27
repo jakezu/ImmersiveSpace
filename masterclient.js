@@ -34,6 +34,8 @@ var mouselook = false;
 
 var arrow3;
 var x0, x1, z0, z1;
+var north_x = 0;
+var north_z = -100;
 
 
 var _g =
@@ -99,12 +101,17 @@ var MasterClient = Class.extend
 		//arrow3.placeable.SetPosition(0,-0.75,-3);
 		arrow3.placeable.SetPosition(0,-0.9,-3);
 		var trans = arrow3.placeable.transform;
+		//arrow3.mesh.AutoSetPlaceable();
+		//var trans2 = arrow3.mesh.transform;
 		trans.rot.y = -90;
+		//trans2.rot.y = 0;
 		trans.scale.x = 0.1;
 		trans.scale.z = 0.1;
 		trans.scale.y = 0.01;
 		arrow3.placeable.transform = trans;
+		//arrow3.mesh.transform = trans2;
 		widget3.text = voidentity.placeable.WorldOrientation();
+		//arrow3.mesh.SetAdjustOrientation(0,-90,0);
 		//widget3.text = voidentity.mesh.WorldOBB();
 		//widget2.text = arrow3.placeable.transform;
 		//arrow3.placeable.SetParent(voidentity, preserveWorldTransform=true);
@@ -378,8 +385,8 @@ var MasterClient = Class.extend
 			angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
 			if (angle > 360)
 				angle -= 360;
-			compass_angle = -angle;
-			compass.setRotation(compass_angle);
+			//compass_angle = -angle;
+			//compass.setRotation(compass_angle);
 			widget4.text = "Bearing: " +(angle).toFixed(2);
 		}
 		
@@ -401,8 +408,8 @@ var MasterClient = Class.extend
 				angle-=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
 				if (angle < 0)
 					angle += 360;
-				compass_angle = -angle;
-				compass.setRotation(compass_angle);
+				//compass_angle = -angle;
+				//compass.setRotation(compass_angle);
 				widget4.text = "Bearing: " + (angle).toFixed(2);
 			}
 		}
@@ -424,8 +431,8 @@ var MasterClient = Class.extend
 				sector = 0;
 			angle = sector*60;
 			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
-			compass_angle = -angle;
-			compass.setRotation(compass_angle);
+			//compass_angle = -angle;
+			//compass.setRotation(compass_angle);
 			widget3.text = "Sector: "+sector;
 			widget4.text = "Bearing: " +parseInt(angle);
 		}
@@ -439,8 +446,8 @@ var MasterClient = Class.extend
 				sector = 5;
 			angle = sector*60;
 			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
-			compass_angle = -angle;
-			compass.setRotation(compass_angle);
+			//compass_angle = -angle;
+			//compass.setRotation(compass_angle);
 			widget3.text = "Sector: "+sector;
 			widget4.text = "Bearing: " +parseInt(angle);
 		}
@@ -489,8 +496,8 @@ var MasterClient = Class.extend
 			voidentity.placeable.transform = transform;
 			sector = 0;
 			angle = 0;
-			compass_angle = -angle;
-			compass.setRotation(compass_angle);			
+			//compass_angle = -angle;
+			//compass.setRotation(compass_angle);			
 			widget3.text = "Sector: "+sector;
 			widget4.text = "Bearing: " +parseInt(angle);
 			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
@@ -532,11 +539,18 @@ var MasterClient = Class.extend
 		
 		x0 = voidentity.placeable.WorldPosition().x;
 		z0 = voidentity.placeable.WorldPosition().z;
+		var deltaX = north_x - x0;
+		var deltaZ = north_z - z0;
+		var angleInDegrees = Math.atan2(deltaZ, deltaX) * 180 / Math.PI;
+		//compass_angle = -angle;
+		//compass_angle = transform.rot.y;
+		//compass.setRotation(90+angleInDegrees);		
 		//widget2.text = voidentity.placeable.WorldOrientation().Angle();
-		widget2.text = arrow3.placeable.Orientation();
+		//widget2.text = arrow3.placeable.Orientation();
+		widget2.text = (angleInDegrees%180).toFixed(2);
 		//widget2.text = voidentity.placeable.WorldPosition().x.toFixed(2);
 		//widget3.text = voidentity.placeable.WorldPosition().z.toFixed(2);
-		//widget3.text = voidentity.placeable.WorldOrientation();
+		widget3.text = voidentity.placeable.Position();
 		//widget3.text = voidentity.placeable.WorldPosition().DistanceSq(pos1);
 	},
 	
@@ -593,9 +607,11 @@ var MasterClient = Class.extend
 			angle += (_g.rotate.sensitivity * parseInt(param)) + 360;
 		else
 			angle += _g.rotate.sensitivity * parseInt(param);
-		compass_angle = -angle;
+		//compass_angle = -angle;
+		compass_angle = transform.rot.y;
 		compass.setRotation(compass_angle);
-		widget4.text = "Bearing: " +angle.toFixed(2);
+		//widget4.text = "Bearing: " +angle.toFixed(2);
+		widget4.text = "Bearing: " +(-(transform.rot.y)%360).toFixed(2);
 	},
 
 	// Handler for mouse y axis relative movement
@@ -633,12 +649,13 @@ var MasterClient = Class.extend
 			panning = panning+increase;
 		widget4.text = "Panning: " +panning.toFixed(2);
 		var trans = arrow3.placeable.transform;
-		//trans.rot.y = -90-panning;
-		trans.rot.y = -panning;
+		trans.rot.y = -90-panning;
+		//trans.rot.y = -panning;
 		arrow3.placeable.transform = trans;
 		voidentity.Exec(5, "_MSG_ROTATE_ARROW_", panning);
 		widget2.text = ((arrow3.placeable.Orientation().Angle())*(180/Math.PI)).toFixed(2);
-		widget3.text = voidentity.placeable.WorldPosition();
+		widget3.text = voidentity.placeable.Position();
+		//widget3.text = voidentity.placeable.WorldPosition();
 		//widget3.text = voidentity.placeable.transform.rot;
 	},
 	
