@@ -36,12 +36,12 @@ var arrow3;
 var x0, x1, z0, z1;
 var north_x = 0;
 var north_z = -1000;
-var bearing = 0;
-var deltaInDegrees = 0;
-var angleInDegrees = 0;
-var previous_angleInDegrees = 0;
-var bearingangle = 0;
-var angle2 = 0;
+var bearing = 0.0;
+var deltaInDegrees = 0.0;
+var angleInDegrees = 0.0;
+var previous_angleInDegrees = 0.0;
+var bearingangle = 0.0;
+var angle2 = 0.0;
 
 
 var _g =
@@ -116,7 +116,7 @@ var MasterClient = Class.extend
 		trans.scale.y = 0.01;
 		arrow3.placeable.transform = trans;
 		//arrow3.mesh.transform = trans2;
-		widget3.text = voidentity.placeable.WorldOrientation();
+		//widget3.text = voidentity.placeable.WorldOrientation();
 		//arrow3.mesh.SetAdjustOrientation(0,-90,0);
 		//widget3.text = voidentity.mesh.WorldOBB();
 		//widget2.text = arrow3.placeable.transform;
@@ -137,8 +137,8 @@ var MasterClient = Class.extend
 	{
 		var layout = new QVBoxLayout();
 		mainWidget.setLayout(layout);
-		//mainWidget.setFixedWidth(250);
-		mainWidget.setFixedWidth(650);
+		mainWidget.setFixedWidth(250);
+		//mainWidget.setFixedWidth(650);
 		layout.addWidget(widget1, 0, 1);
 		layout.addWidget(widget2, 0, 1);
 		layout.addWidget(widget3, 0, 1);
@@ -311,7 +311,7 @@ var MasterClient = Class.extend
 		var void_transform = void_placeable.transform;
 		void_transform.pos = new float3(0, 20, 0);
 		voidentity.placeable.transform = void_transform;
-		widget2.text = voidentity.placeable.transform;
+		//widget2.text = voidentity.placeable.transform;
 	},
 	
 	// Create handler for keyboard and mouse events
@@ -346,7 +346,6 @@ var MasterClient = Class.extend
 			{
 				_g.move.amount.z = -Math.cos(radians2);
 				_g.move.amount.x = Math.sin(radians2);
-				widget5.text = radians2;
 			}
 			//if (mouselook && sector == 0)
 			else if (mouselook && sector == 0)
@@ -365,7 +364,6 @@ var MasterClient = Class.extend
 			{
 				_g.move.amount.z = Math.cos(radians2);
 				_g.move.amount.x = -Math.sin(radians2);
-				widget5.text = radians2;
 			}		
 			else if (mouselook && sector == 0)
 				_g.move.amount.z = 1;
@@ -383,7 +381,6 @@ var MasterClient = Class.extend
 			{
 				_g.move.amount.z = Math.sin(radians2);
 				_g.move.amount.x = Math.cos(radians2);
-				widget5.text = radians2;
 			}		
 			else if (mouselook && sector == 0)
 				_g.move.amount.x = 1;
@@ -407,7 +404,6 @@ var MasterClient = Class.extend
 			{
 				_g.move.amount.z = -Math.sin(radians2);
 				_g.move.amount.x = -Math.cos(radians2);
-				widget5.text = radians2;
 			}		
 			else if (mouselook && sector == 0)
 				_g.move.amount.x = -1;
@@ -562,18 +558,23 @@ var MasterClient = Class.extend
 		//compass.setRotation(90+angleInDegrees);		
 		//compass.setRotation(-angleInDegrees);
 		//angle2 = parseInt(bearing) + deltaInDegrees;
-		angle2 = parseInt(bearing) + angleInDegrees;
+		//angle2 = parseInt(bearing) - angleInDegrees;
+		///angle2 = bearing+angleInDegrees;
+		angle2 = bearing;
 		//angle2 = parseInt(angle2)+deltaInDegrees;
 		//compass.setRotation((bearing + previous_angleInDegrees));		
-		compass.setRotation(angle2);		
+		compass.setRotation(-angle2);		
 		//widget2.text = voidentity.placeable.WorldOrientation().Angle();
 		//widget2.text = arrow3.placeable.Orientation();
 		//widget2.text = angle2.toFixed(2);
-		widget2.text = angle2;
+		///widget2.text = -angle2.toFixed(2);
+		widget2.text = "Azimuth: " +angle2.toFixed(2);
+		widget5.text = "ZX-coordinates: "+voidentity.placeable.WorldPosition().z.toFixed(2) + ", " +voidentity.placeable.WorldPosition().x.toFixed(2);
 		//widget2.text = voidentity.placeable.WorldPosition().x.toFixed(2);
 		//widget3.text = voidentity.placeable.WorldPosition().z.toFixed(2);
 		//widget3.text = voidentity.placeable.Position();
-		widget3.text = angleInDegrees.toFixed(2);
+		//widget3.text = angleInDegrees.toFixed(2);
+		//widget3.text = "Direction of travel angle: " +(angle2).toFixed(2);;
 		//widget3.text = voidentity.placeable.WorldPosition().DistanceSq(pos1);
 	},
 	
@@ -624,24 +625,13 @@ var MasterClient = Class.extend
 		var transform = voidentity.placeable.transform;
 		transform.rot.y -= _g.rotate.sensitivity * parseInt(param);
 		voidentity.placeable.transform = transform;
-		if ((angle+_g.rotate.sensitivity * parseInt(param)) > 360)
-			angle += (_g.rotate.sensitivity * parseInt(param)) - 360;
-		else if ((angle+_g.rotate.sensitivity * parseInt(param)) < 0)
-			angle += (_g.rotate.sensitivity * parseInt(param)) + 360;
-		else
-			angle += _g.rotate.sensitivity * parseInt(param);
-		//compass_angle = -angle;
-		//compass_angle = transform.rot.y;
-		//compass.setRotation(compass_angle);
-		//widget4.text = "Bearing: " +angle.toFixed(2);
-		//widget4.text = "Bearing: " +(-(transform.rot.y)%360).toFixed(2);
-		bearing = (-(transform.rot.y)%360).toFixed(2);
-		angle2 = parseInt(bearing) + angleInDegrees;
-		//angle2 = (-(transform.rot.y)%360).toFixed(2);
-		//angle2 = parseInt(bearing) + deltaInDegrees;
+		bearing = (-(transform.rot.y)%360);
+		//bearing = (-(transform.rot.y)%180);
+		//angle2 = bearing+angleInDegrees;
+		angle2 = bearing;
 		compass.setRotation(-angle2);
-		widget4.text = "Bearing: " +bearing;
-		//widget4.text = "Bearing: " +angle2;
+		//widget4.text = "Viewing angle: " +bearing.toFixed(2);
+		widget4.text = "Viewing direction: " +bearing.toFixed(2);
 	},
 
 	// Handler for mouse y axis relative movement
@@ -677,16 +667,13 @@ var MasterClient = Class.extend
 		else
 			//panning = panning+(param/rect.width()*60);
 			panning = panning+increase;
-		widget4.text = "Panning: " +panning.toFixed(2);
+		//widget4.text = "Panning: " +panning.toFixed(2);
+		widget3.text = "Travelling direction: " +panning.toFixed(2);
 		var trans = arrow3.placeable.transform;
 		trans.rot.y = -90-panning;
 		//trans.rot.y = -panning;
 		arrow3.placeable.transform = trans;
 		voidentity.Exec(5, "_MSG_ROTATE_ARROW_", panning);
-		widget2.text = ((arrow3.placeable.Orientation().Angle())*(180/Math.PI)).toFixed(2);
-		widget3.text = voidentity.placeable.Position();
-		//widget3.text = voidentity.placeable.WorldPosition();
-		//widget3.text = voidentity.placeable.transform.rot;
 	},
 	
 	statusWidget: function(message, row)
