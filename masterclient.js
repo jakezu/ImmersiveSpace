@@ -35,7 +35,13 @@ var mouselook = false;
 var arrow3;
 var x0, x1, z0, z1;
 var north_x = 0;
-var north_z = -100;
+var north_z = -1000;
+var bearing = 0;
+var deltaInDegrees = 0;
+var angleInDegrees = 0;
+var previous_angleInDegrees = 0;
+var bearingangle = 0;
+var angle2 = 0;
 
 
 var _g =
@@ -328,6 +334,10 @@ var MasterClient = Class.extend
 		//var radians2 = (Math.abs(panning)/(rect.width()/2))*60*Math.PI/180;
 		//var radians2 = (panning/(rect.width()/2))*60*Math.PI/180;
 		var radians2 = (panning)*Math.PI/180;
+		//previous_angleInDegrees = deltaInDegrees;
+		//previous_angleInDegrees = angleInDegrees;
+		previous_angleInDegrees = angle2;
+		//previous_angleInDegrees = bearingangle;
 		
 		// forward
 		if (e.keyCode == Qt.Key_W)
@@ -540,17 +550,30 @@ var MasterClient = Class.extend
 		x0 = voidentity.placeable.WorldPosition().x;
 		z0 = voidentity.placeable.WorldPosition().z;
 		var deltaX = north_x - x0;
-		var deltaZ = north_z - z0;
-		var angleInDegrees = Math.atan2(deltaZ, deltaX) * 180 / Math.PI;
+		//var deltaZ = north_z - z0; // Z-axis goes down so deltaZ calculation has to be reserved
+		var deltaZ = z0 - north_z; // Z-axis goes down so deltaZ calculation has to be reserved
+		angleInDegrees = -90 + Math.atan2(deltaZ, deltaX) * 180 / Math.PI;
+		deltaInDegrees = angleInDegrees - previous_angleInDegrees;
+		//if (angleInDegrees < 0)
+		//	angleInDegrees +=360;
+		//var angleInDegrees = -90 + Math.atan2(deltaZ, deltaX) * 180 / Math.PI;
 		//compass_angle = -angle;
 		//compass_angle = transform.rot.y;
 		//compass.setRotation(90+angleInDegrees);		
+		//compass.setRotation(-angleInDegrees);
+		//angle2 = parseInt(bearing) + deltaInDegrees;
+		angle2 = parseInt(bearing) + angleInDegrees;
+		//angle2 = parseInt(angle2)+deltaInDegrees;
+		//compass.setRotation((bearing + previous_angleInDegrees));		
+		compass.setRotation(angle2);		
 		//widget2.text = voidentity.placeable.WorldOrientation().Angle();
 		//widget2.text = arrow3.placeable.Orientation();
-		widget2.text = (angleInDegrees%180).toFixed(2);
+		//widget2.text = angle2.toFixed(2);
+		widget2.text = angle2;
 		//widget2.text = voidentity.placeable.WorldPosition().x.toFixed(2);
 		//widget3.text = voidentity.placeable.WorldPosition().z.toFixed(2);
-		widget3.text = voidentity.placeable.Position();
+		//widget3.text = voidentity.placeable.Position();
+		widget3.text = angleInDegrees.toFixed(2);
 		//widget3.text = voidentity.placeable.WorldPosition().DistanceSq(pos1);
 	},
 	
@@ -608,10 +631,17 @@ var MasterClient = Class.extend
 		else
 			angle += _g.rotate.sensitivity * parseInt(param);
 		//compass_angle = -angle;
-		compass_angle = transform.rot.y;
-		compass.setRotation(compass_angle);
+		//compass_angle = transform.rot.y;
+		//compass.setRotation(compass_angle);
 		//widget4.text = "Bearing: " +angle.toFixed(2);
-		widget4.text = "Bearing: " +(-(transform.rot.y)%360).toFixed(2);
+		//widget4.text = "Bearing: " +(-(transform.rot.y)%360).toFixed(2);
+		bearing = (-(transform.rot.y)%360).toFixed(2);
+		angle2 = parseInt(bearing) + angleInDegrees;
+		//angle2 = (-(transform.rot.y)%360).toFixed(2);
+		//angle2 = parseInt(bearing) + deltaInDegrees;
+		compass.setRotation(-angle2);
+		widget4.text = "Bearing: " +bearing;
+		//widget4.text = "Bearing: " +angle2;
 	},
 
 	// Handler for mouse y axis relative movement
