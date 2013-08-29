@@ -42,6 +42,9 @@ var angleInDegrees = 0.0;
 var previous_angleInDegrees = 0.0;
 var bearingangle = 0.0;
 var angle2 = 0.0;
+var prev_angle = 0;
+var direction = 0;
+var altitude = 0;
 
 
 var _g =
@@ -71,9 +74,8 @@ var MasterClient = Class.extend
 		frame.Updated.connect(this, this.Update);
 		
 		Log("**** Creating master client objects");
-		widget1.text = "Client1 (MasterClient)";
 
-		this.setWidgetLayout();
+		this.setInfoWidgetLayout();
 		this.removeFreeLookCamera();
 		this.createMasterClient();
 		this.createArrow();
@@ -81,9 +83,7 @@ var MasterClient = Class.extend
 		this.setSpawnPoint();
 		this.createInputHandler();
 		this.drawCompass();
-		//this.drawForwardIndicator();
-		
-		//this.MidLine();
+		this.showInfoWidgetDefaultValues();
 		
 		// Signals
 		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
@@ -95,6 +95,16 @@ var MasterClient = Class.extend
         masterclient.placeable.AttributeChanged.connect(this, this.ParentEntityRefChanged);	
 	},
 	
+	showInfoWidgetDefaultValues: function()
+	{
+		widget1.text = "Client1 (MasterClient)";
+		widget2.text = "Azimuth: " +angle2.toFixed(2);
+		widget3.text = "Direction of travel: " +direction;		
+		widget4.text = "Sector: "+sector;
+		widget5.text = "Altitude: "+voidentity.placeable.transform.pos.y;//.toFixed(2);
+		//widget5.text = "Field of vision: "+fov.toFixed(2);
+	},
+	
 	createArrow: function()
 	{
 		arrow3 = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh"]);
@@ -102,25 +112,14 @@ var MasterClient = Class.extend
 		var mats = arrow3.mesh.meshMaterial;
 		mats[0] = "assets/Metal.material";
 		arrow3.mesh.meshMaterial = mats;
-		//arrow3.placeable.SetPosition(0,-2,-7);
 		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
-		//arrow3.placeable.SetPosition(0,-0.75,-3);
 		arrow3.placeable.SetPosition(0,-0.9,-3);
 		var trans = arrow3.placeable.transform;
-		//arrow3.mesh.AutoSetPlaceable();
-		//var trans2 = arrow3.mesh.transform;
 		trans.rot.y = -90;
-		//trans2.rot.y = 0;
 		trans.scale.x = 0.1;
 		trans.scale.z = 0.1;
 		trans.scale.y = 0.01;
 		arrow3.placeable.transform = trans;
-		//arrow3.mesh.transform = trans2;
-		//widget3.text = voidentity.placeable.WorldOrientation();
-		//arrow3.mesh.SetAdjustOrientation(0,-90,0);
-		//widget3.text = voidentity.mesh.WorldOBB();
-		//widget2.text = arrow3.placeable.transform;
-		//arrow3.placeable.SetParent(voidentity, preserveWorldTransform=true);
 	},
 	
 	ParentEntityRefChanged: function(attribute)
@@ -133,12 +132,11 @@ var MasterClient = Class.extend
 		}
 	},
 	
-	setWidgetLayout: function()
+	setInfoWidgetLayout: function()
 	{
 		var layout = new QVBoxLayout();
 		mainWidget.setLayout(layout);
 		mainWidget.setFixedWidth(250);
-		//mainWidget.setFixedWidth(650);
 		layout.addWidget(widget1, 0, 1);
 		layout.addWidget(widget2, 0, 1);
 		layout.addWidget(widget3, 0, 1);
@@ -151,7 +149,6 @@ var MasterClient = Class.extend
 		mainWidget.setStyleSheet("QLabel {color: black; font-size: 14px;}");
 		widget1.setStyleSheet("QLabel {color: blue; font-size: 18px; font-weight: bold;}");
 		rect = ui.GraphicsScene().sceneRect;
-		//proxy.windowFlags = Qt.Widget;
 		proxy.windowFlags = 0;
 		proxy.visible = true;
 		proxy.y = 10;
@@ -283,7 +280,6 @@ var MasterClient = Class.extend
 	{
 		masterclient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
 
-		//masterclient.SetName("MasterClient");
 		masterclient.SetName("MasterCamera");
 		masterclient.SetTemporary(true);
 		var placeable = masterclient.placeable;
@@ -298,10 +294,8 @@ var MasterClient = Class.extend
 	setMasterCamera: function()
 	{
 		mastercamera = masterclient.camera;
-		
 		mastercamera.verticalFov = fov;
 		mastercamera.SetActive();
-		widget5.text = "Field of vision: "+fov.toFixed(2);
 	},
 	
 	// Set initial spawn point
@@ -311,7 +305,6 @@ var MasterClient = Class.extend
 		var void_transform = void_placeable.transform;
 		void_transform.pos = new float3(0, 20, 0);
 		voidentity.placeable.transform = void_transform;
-		//widget2.text = voidentity.placeable.transform;
 	},
 	
 	// Create handler for keyboard and mouse events
@@ -330,132 +323,92 @@ var MasterClient = Class.extend
 	{
 	
 		var pos1 = voidentity.placeable.WorldPosition();
-		var radians = (sector)*60*Math.PI/180;
+		//var radians = (sector)*60*Math.PI/180;
 		//var radians2 = (Math.abs(panning)/(rect.width()/2))*60*Math.PI/180;
-		//var radians2 = (panning/(rect.width()/2))*60*Math.PI/180;
-		var radians2 = (panning)*Math.PI/180;
-		//previous_angleInDegrees = deltaInDegrees;
-		//previous_angleInDegrees = angleInDegrees;
+		var radians2 = (direction)*Math.PI/180;
 		previous_angleInDegrees = angle2;
-		//previous_angleInDegrees = bearingangle;
 		
+		widget5.text = "ZX-coordinates: "+voidentity.placeable.WorldPosition().z.toFixed(2) + ", " +voidentity.placeable.WorldPosition().x.toFixed(2);
+
 		// forward
 		if (e.keyCode == Qt.Key_W)
 		{
-			if (panning != 0)
-			{
-				_g.move.amount.z = -Math.cos(radians2);
-				_g.move.amount.x = Math.sin(radians2);
-			}
-			//if (mouselook && sector == 0)
-			else if (mouselook && sector == 0)
-				_g.move.amount.z = -1;
-			else
-			{
-				_g.move.amount.z = -Math.cos(radians);
-				_g.move.amount.x = Math.sin(radians);
-			}
+			_g.move.amount.z = -Math.cos(radians2);
+			_g.move.amount.x = Math.sin(radians2);
+
 		}
 		
 		// backward
 		else if (e.keyCode == Qt.Key_S)
 		{
-			if (panning != 0)
-			{
-				_g.move.amount.z = Math.cos(radians2);
-				_g.move.amount.x = -Math.sin(radians2);
-			}		
-			else if (mouselook && sector == 0)
-				_g.move.amount.z = 1;
-			else
-			{
-				_g.move.amount.z = Math.cos(radians);
-				_g.move.amount.x = -Math.sin(radians);
-			}
+			_g.move.amount.z = Math.cos(radians2);
+			_g.move.amount.x = -Math.sin(radians2);
 		}
 		
 		// right
 		else if (e.keyCode == Qt.Key_D)
 		{
-			if (panning != 0)
-			{
-				_g.move.amount.z = Math.sin(radians2);
-				_g.move.amount.x = Math.cos(radians2);
-			}		
-			else if (mouselook && sector == 0)
-				_g.move.amount.x = 1;
-			else
-			{
-				_g.move.amount.z = Math.sin(radians);
-				_g.move.amount.x = Math.cos(radians);
-			}
-			angle+=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
-			if (angle > 360)
-				angle -= 360;
-			//compass_angle = -angle;
-			//compass.setRotation(compass_angle);
-			widget4.text = "Bearing: " +(angle).toFixed(2);
+			_g.move.amount.z = Math.sin(radians2);
+			_g.move.amount.x = Math.cos(radians2);
 		}
 		
 		// left
 		else if (e.keyCode == Qt.Key_A)
 		{
-			if (panning != 0)
-			{
-				_g.move.amount.z = -Math.sin(radians2);
-				_g.move.amount.x = -Math.cos(radians2);
-			}		
-			else if (mouselook && sector == 0)
-				_g.move.amount.x = -1;
-			else
-			{
-				_g.move.amount.z = -Math.sin(radians);
-				_g.move.amount.x = -Math.cos(radians);
-				angle-=(Math.atan(Math.cos(radians)/distance_to_north))*(180/Math.PI);
-				if (angle < 0)
-					angle += 360;
-				//compass_angle = -angle;
-				//compass.setRotation(compass_angle);
-				widget4.text = "Bearing: " + (angle).toFixed(2);
-			}
+			_g.move.amount.z = -Math.sin(radians2);
+			_g.move.amount.x = -Math.cos(radians2);
 		}
 		
 		// up
 		else if (e.keyCode == Qt.Key_Space)
+		{
 			_g.move.amount.y = 1;
+			widget5.text = "Altitude: "+voidentity.placeable.transform.pos.y.toFixed(2);
+		}
 		
 		// down
 		else if (e.keyCode == Qt.Key_C)
+		{
 			_g.move.amount.y = -1;
+			widget5.text = "Altitude: "+voidentity.placeable.transform.pos.y.toFixed(2);
+		}
 		
 		// change sector +
 		else if (e.keyCode == Qt.Key_Plus)
 		{
-			if (sector < 5)
-				sector++;
+			if (direction == Math.ceil(direction/60)*60)
+				direction += 60;
 			else
-				sector = 0;
-			angle = sector*60;
-			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
-			//compass_angle = -angle;
-			//compass.setRotation(compass_angle);
-			widget3.text = "Sector: "+sector;
-			widget4.text = "Bearing: " +parseInt(angle);
+				direction = Math.ceil(direction/60)*60;
+			if (direction > 300)
+				direction = 0;
+			var trans = arrow3.placeable.transform;
+			trans.rot.y = -90-direction;
+			arrow3.placeable.transform = trans;
+			sector = direction/60+1;	
+			//voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
+			voidentity.Exec(5, "_MSG_ROTATE_ARROW_", direction);
+			widget3.text = "Direction of travel: " +direction;		
+			widget4.text = "Sector: "+sector;
 		}
 		
 		// change sector -
 		else if (e.keyCode == Qt.Key_Minus)
 		{
-			if (sector > 0)
-				sector--;
+			if (direction == Math.floor(direction/60)*60)
+				direction -= 60;
 			else
-				sector = 5;
-			angle = sector*60;
-			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
-			//compass_angle = -angle;
-			//compass.setRotation(compass_angle);
-			widget3.text = "Sector: "+sector;
-			widget4.text = "Bearing: " +parseInt(angle);
+				direction = Math.floor(direction/60)*60;
+			if (direction < 0)
+				direction = 300;
+			var trans = arrow3.placeable.transform;
+			trans.rot.y = -90-direction;
+			arrow3.placeable.transform = trans;			
+			//voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
+			sector = direction/60+1;	
+			voidentity.Exec(5, "_MSG_ROTATE_ARROW_", direction);
+			widget3.text = "Direction of travel: " +direction;		
+			widget4.text = "Sector: "+sector;
 		}
 		
 		// increse vertical fov
@@ -494,19 +447,16 @@ var MasterClient = Class.extend
 			voidentity.Exec(5, "ChangeFovMsg", fov);
 		}			
 
-		// Reset direction
-		else if (e.keyCode == Qt.Key_N)
+		// Reset initial state
+		else if (e.keyCode == Qt.Key_R)
 		{
-			var transform = voidentity.placeable.transform;
-			transform.rot.y = 0;
-			voidentity.placeable.transform = transform;
-			sector = 0;
-			angle = 0;
-			//compass_angle = -angle;
-			//compass.setRotation(compass_angle);			
-			widget3.text = "Sector: "+sector;
-			widget4.text = "Bearing: " +parseInt(angle);
-			voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
+			this.setSpawnPoint();
+			angle2 = 0;
+			direction = 0;
+			var trans = arrow3.placeable.transform;
+			trans.rot.y = -90;
+			arrow3.placeable.transform = trans;
+			this.showInfoWidgetDefaultValues();
 		}
 		
 		// Move cameras forward
@@ -517,9 +467,11 @@ var MasterClient = Class.extend
 		else if (e.keyCode == Qt.Key_PageDown)
 			voidentity.Exec(5, "MoveCamerasMsg", "backward");
 		
+		
 		// Reset cameras positions
-		else if (e.keyCode == Qt.Key_R)
+		else if (e.keyCode == Qt.Key_N)
 			voidentity.Exec(5, "ResetCamerasMsg");
+		
 		
 		// Increase black block size
 		else if (e.keyCode == Qt.Key_L)
@@ -546,42 +498,16 @@ var MasterClient = Class.extend
 		x0 = voidentity.placeable.WorldPosition().x;
 		z0 = voidentity.placeable.WorldPosition().z;
 		var deltaX = north_x - x0;
-		//var deltaZ = north_z - z0; // Z-axis goes down so deltaZ calculation has to be reserved
 		var deltaZ = z0 - north_z; // Z-axis goes down so deltaZ calculation has to be reserved
 		angleInDegrees = -90 + Math.atan2(deltaZ, deltaX) * 180 / Math.PI;
 		deltaInDegrees = angleInDegrees - previous_angleInDegrees;
-		//if (angleInDegrees < 0)
-		//	angleInDegrees +=360;
-		//var angleInDegrees = -90 + Math.atan2(deltaZ, deltaX) * 180 / Math.PI;
-		//compass_angle = -angle;
-		//compass_angle = transform.rot.y;
-		//compass.setRotation(90+angleInDegrees);		
-		//compass.setRotation(-angleInDegrees);
-		//angle2 = parseInt(bearing) + deltaInDegrees;
-		//angle2 = parseInt(bearing) - angleInDegrees;
-		///angle2 = bearing+angleInDegrees;
-		angle2 = bearing;
-		//angle2 = parseInt(angle2)+deltaInDegrees;
-		//compass.setRotation((bearing + previous_angleInDegrees));		
-		compass.setRotation(-angle2);		
-		//widget2.text = voidentity.placeable.WorldOrientation().Angle();
-		//widget2.text = arrow3.placeable.Orientation();
-		//widget2.text = angle2.toFixed(2);
-		///widget2.text = -angle2.toFixed(2);
+		compass.setRotation(-angle2);
 		widget2.text = "Azimuth: " +angle2.toFixed(2);
-		widget5.text = "ZX-coordinates: "+voidentity.placeable.WorldPosition().z.toFixed(2) + ", " +voidentity.placeable.WorldPosition().x.toFixed(2);
-		//widget2.text = voidentity.placeable.WorldPosition().x.toFixed(2);
-		//widget3.text = voidentity.placeable.WorldPosition().z.toFixed(2);
-		//widget3.text = voidentity.placeable.Position();
-		//widget3.text = angleInDegrees.toFixed(2);
-		//widget3.text = "Direction of travel angle: " +(angle2).toFixed(2);;
-		//widget3.text = voidentity.placeable.WorldPosition().DistanceSq(pos1);
 	},
 	
 	// Handler for key release commands
 	HandleKeyRelease: function(e)
 	{
-	
 	if (e.keyCode == Qt.Key_W && _g.move.amount.z != 0 )
 		_g.move.amount = new float3(0,0,0);
 	
@@ -626,12 +552,9 @@ var MasterClient = Class.extend
 		transform.rot.y -= _g.rotate.sensitivity * parseInt(param);
 		voidentity.placeable.transform = transform;
 		bearing = (-(transform.rot.y)%360);
-		//bearing = (-(transform.rot.y)%180);
-		//angle2 = bearing+angleInDegrees;
 		angle2 = bearing;
 		compass.setRotation(-angle2);
-		//widget4.text = "Viewing angle: " +bearing.toFixed(2);
-		widget4.text = "Viewing direction: " +bearing.toFixed(2);
+		widget2.text = "Azimuth: " +angle2.toFixed(2);
 	},
 
 	// Handler for mouse y axis relative movement
@@ -649,45 +572,23 @@ var MasterClient = Class.extend
 	
 	HandleMousePan: function(param)
 	{
-		//panning = -90-((panning+param)/(rect.width())*30);
-		//panning = panning+(param/rect.width()*60);
 		var increase = param/rect.width()*60;
 		var increase = param/rect.width()*120;
-		if (param < 0 && panning+increase < 10 && panning+increase > 0)	// snap to zero
-			panning = 0;
-		else if (param > 0 && panning+increase > 350)			// snap to zero
-			panning = 0;
-		//else if (panning+(param/rect.width()*60) < 0)
-		else if (panning+increase < 0)
-			panning = 360+increase;
-		//else if (panning+(param/rect.width()*60) > 360)
-		else if (panning+increase > 360)
-			//panning = (param/rect.width()*60);
-			panning = increase;
+		if (param < 0 && direction+increase < 10 && direction+increase > 0)	// snap to zero
+			direction = 0;
+		else if (param > 0 && direction+increase > 350)									// snap to zero
+			direction = 0;
+		else if (direction+increase < 0)
+			direction = 360+increase;
+		else if (direction+increase > 360)
+			direction = increase;
 		else
-			//panning = panning+(param/rect.width()*60);
-			panning = panning+increase;
-		//widget4.text = "Panning: " +panning.toFixed(2);
-		widget3.text = "Travelling direction: " +panning.toFixed(2);
+			direction = direction+increase;
+		widget3.text = "Direction of travel: " +direction.toFixed(2);
 		var trans = arrow3.placeable.transform;
-		trans.rot.y = -90-panning;
-		//trans.rot.y = -panning;
+		trans.rot.y = -90-direction;
 		arrow3.placeable.transform = trans;
-		voidentity.Exec(5, "_MSG_ROTATE_ARROW_", panning);
-	},
-	
-	statusWidget: function(message, row)
-	{
-		if (typeof(row)==='undefined') 
-			row=0;
-		label.indent = 10;
-		label.text = message;
-		label.setStyleSheet("QLabel {background-color: transparent; color: white; font-size: 16px; }");
-		proxy.x = 10;
-		proxy.y = 200+row*20;
-		proxy.windowFlags = 0;
-		proxy.visible = true;
-		/**/
+		voidentity.Exec(5, "_MSG_ROTATE_ARROW_", direction);
 	},
 	
 	drawCompass: function()
