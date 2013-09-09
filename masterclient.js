@@ -13,6 +13,7 @@ var fov = 38.5; // Field of vision (45 = default, 38.5 is good in one particular
 var sector = 0;
 var voidentity = scene.GetEntityByName("Void");
 var compass = new QPixmap();
+var needle = new QPixmap();
 var pixmap_arrow = new QPixmap();
 var arrow = new QPixmap();
 var angle = 0;
@@ -20,6 +21,7 @@ var panning = 0;
 var compass_angle = 0;
 var distance_to_north = 10000;
 var proxy = new UiProxyWidget();
+var proxy2 = new UiProxyWidget();
 var mainWidget = new QWidget();
 var widget1 = new QLabel();
 var widget2 = new QLabel();
@@ -75,6 +77,7 @@ var MasterClient = Class.extend
 		
 		Log("**** Creating master client objects");
 
+		this.clearScene();
 		this.setInfoWidgetLayout();
 		this.removeFreeLookCamera();
 		this.createMasterClient();
@@ -84,6 +87,7 @@ var MasterClient = Class.extend
 		this.createInputHandler();
 		this.drawCompass();
 		this.showInfoWidgetDefaultValues();
+		//this.helpWidget();
 		
 		// Signals
 		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
@@ -94,6 +98,27 @@ var MasterClient = Class.extend
 		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
         masterclient.placeable.AttributeChanged.connect(this, this.ParentEntityRefChanged);	
 	},
+	
+	clearScene: function()
+	{
+		var ui_item = ui.GraphicsScene().items();
+		for (var i=0; i < ui_item.length; i++)
+		//	ui.GraphicsScene().removeItem(ui_item[i]);
+		{
+			if (ui_item[i].type() == 7)
+			{
+				ui.GraphicsScene().removeItem(ui_item[i]);
+				Log("**** Removed: " +ui_item[i]);
+			}
+		} 
+		var oldarrow = scene.GetEntityByName("Arrow");
+		if (oldarrow)
+		{
+			scene.RemoveEntity(oldarrow.id,'');
+			Log("**** Old Arrow entity removed");
+		}		
+	},
+	
 	
 	showInfoWidgetDefaultValues: function()
 	{
@@ -107,11 +132,12 @@ var MasterClient = Class.extend
 	
 	createArrow: function()
 	{
-		arrow3 = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh"]);
+		arrow3 = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh", "EC_Name"]);
+		arrow3.SetName("Arrow");
 		arrow3.mesh.meshRef = "assets/Arrow.mesh";
 		var mats = arrow3.mesh.meshMaterial;
 		mats[0] = "assets/Metal.material";
-		arrow3.mesh.meshMaterial = mats;
+		arrow3.mesh.meshMaterial = mats; 
 		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
 		arrow3.placeable.SetPosition(0,-0.9,-3);
 		var trans = arrow3.placeable.transform;
@@ -142,8 +168,8 @@ var MasterClient = Class.extend
 		layout.addWidget(widget3, 0, 1);
 		layout.addWidget(widget4, 0, 1);
 		layout.addWidget(widget5, 0, 1);
-        layout.setContentsMargins(10,0,10,5);
-        layout.setSpacing(2);
+		layout.setContentsMargins(10,0,10,5);
+		layout.setSpacing(2);
 		proxy = ui.AddWidgetToScene(mainWidget);
 		//mainWidget.setStyleSheet("QLabel {background-color: transparent; color: black; font-size: 16px; opacity: 0,2;}");
 		mainWidget.setStyleSheet("QLabel {color: black; font-size: 14px;}");
@@ -154,6 +180,33 @@ var MasterClient = Class.extend
 		proxy.y = 10;
 		proxy.x = rect.width()-mainWidget.width-10;
 		mainWidget.setWindowOpacity(0.3);
+	},
+	
+	helpWidget: function()
+	{
+		var helpLabel = new QLabel();
+		helpLabel.text = 
+			"KEYBOARD COMMANDS\n\
+			\nW/S/A/D		Move forward/backward/left/right\
+			\nSPACE/C	Move up/down\
+			\nNumpad +	Change direction of travel to the next sector\
+			\nNumpad -	Change direction of travel to the previous sector\
+			\nNumpad 8/9	Minor/Major increase vertical FOV\
+			\nNumpad 5/6	Minor/Major decrease vertical FOV\
+			\nNumpad 7/4	Move cameras forward/backward\
+			\nR		Reset to initial state\
+			\nH		Show/hide this help\
+			\nQ		Show/hide all widgets\
+			";
+		proxy2 = new UiProxyWidget(helpLabel);
+		helpLabel.setStyleSheet("QLabel {background-color: white; color: black; font-size: 16px; margin: 10px;}");
+		helpLabel.setFixedWidth(500);
+		helpLabel.setFixedHeight(260);
+		proxy2.windowFlags = 0;
+		proxy2.y = 50;
+		proxy2.x = 300;		
+		ui.AddProxyWidgetToScene(proxy2);
+		proxy2.visible = true;
 	},
 	
 	LetterBox: function(size) 
@@ -279,7 +332,6 @@ var MasterClient = Class.extend
 	createMasterClient: function()
 	{
 		masterclient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
-
 		masterclient.SetName("MasterCamera");
 		masterclient.SetTemporary(true);
 		var placeable = masterclient.placeable;
@@ -374,7 +426,7 @@ var MasterClient = Class.extend
 		}
 		
 		// change sector +
-		else if (e.keyCode == Qt.Key_Plus)
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_Plus)
 		{
 			if (direction == Math.ceil(direction/60)*60)
 				direction += 60;
@@ -393,7 +445,7 @@ var MasterClient = Class.extend
 		}
 		
 		// change sector -
-		else if (e.keyCode == Qt.Key_Minus)
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_Minus)
 		{
 			if (direction == Math.floor(direction/60)*60)
 				direction -= 60;
@@ -411,8 +463,8 @@ var MasterClient = Class.extend
 			widget4.text = "Sector: "+sector;
 		}
 		
-		// increse vertical fov
-		else if (e.keyCode == Qt.Key_Insert)
+		// major increase vertical fov
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_9)
 		{
 			fov += 1.0;
 			mastercamera.verticalFov = fov;
@@ -420,8 +472,8 @@ var MasterClient = Class.extend
 			voidentity.Exec(4, "ChangeFovMsg", fov);	// 4=peers
 		}
 		
-		// minor increse vertical fov
-		else if (e.keyCode == Qt.Key_Home)
+		// minor increase vertical fov
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_8)
 		{
 			fov += 0.05;
 			mastercamera.verticalFov = fov;
@@ -429,8 +481,8 @@ var MasterClient = Class.extend
 			voidentity.Exec(4, "ChangeFovMsg", fov);
 		}		
 		
-		// decrease vertical fov
-		else if (e.keyCode == Qt.Key_Delete)
+		// major decrease vertical fov
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_6)
 		{
 			fov -= 1.0;
 			mastercamera.verticalFov = fov;
@@ -439,7 +491,7 @@ var MasterClient = Class.extend
 		}
 		
 		// minor decrease vertical fov
-		else if (e.keyCode == Qt.Key_End)
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_5)
 		{
 			fov -= 0.05;
 			mastercamera.verticalFov = fov;
@@ -460,11 +512,11 @@ var MasterClient = Class.extend
 		}
 		
 		// Move cameras forward
-		else if (e.keyCode == Qt.Key_PageUp)
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_n)
 			voidentity.Exec(5, "MoveCamerasMsg", "forward");
 		
 		// Move cameras backward
-		else if (e.keyCode == Qt.Key_PageDown)
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_PageDown)
 			voidentity.Exec(5, "MoveCamerasMsg", "backward");
 		
 		
@@ -495,6 +547,37 @@ var MasterClient = Class.extend
 		else if (e.keyCode == Qt.Key_2)
 			voidentity.Exec(5, "_MSG_MOVING_MODE", "mode2");
 		
+		// Show/hide all widgets and extra graphics
+		else if (e.keyCode == Qt.Key_Q)
+		{
+			if (proxy.visible == true)
+			{
+				proxy.visible = false;
+				proxy2.visible = false;
+				compass.hide();
+				needle.hide();
+				arrow3.mesh.RemoveMesh();
+				voidentity.Exec(4, "_MSG_TOGGLE_WIDGETS_", "HIDE");
+			}
+			else
+			{
+				proxy.visible = true;
+				compass.show();
+				needle.show();
+				arrow3.mesh.meshRef = "assets/Arrow.mesh";
+				voidentity.Exec(4, "_MSG_TOGGLE_WIDGETS_", "SHOW");
+			}
+		}
+		
+		// Show/hide help widget
+		else if (e.keyCode == Qt.Key_H)
+		{
+			if (proxy2.visible == true)
+				proxy2.visible = false;
+			else
+				proxy2.visible = true;
+		}
+		
 		x0 = voidentity.placeable.WorldPosition().x;
 		z0 = voidentity.placeable.WorldPosition().z;
 		var deltaX = north_x - x0;
@@ -503,6 +586,8 @@ var MasterClient = Class.extend
 		deltaInDegrees = angleInDegrees - previous_angleInDegrees;
 		compass.setRotation(-angle2);
 		widget2.text = "Azimuth: " +angle2.toFixed(2);
+		
+		//widget1.text = e.keyCode;
 	},
 	
 	// Handler for key release commands
@@ -576,7 +661,7 @@ var MasterClient = Class.extend
 		var increase = param/rect.width()*120;
 		if (param < 0 && direction+increase < 10 && direction+increase > 0)	// snap to zero
 			direction = 0;
-		else if (param > 0 && direction+increase > 350)									// snap to zero
+		else if (param > 0 && direction+increase > 350)						// snap to zero
 			direction = 0;
 		else if (direction+increase < 0)
 			direction = 360+increase;
@@ -596,7 +681,7 @@ var MasterClient = Class.extend
 		var pixmap_compass = new QPixmap(asset.GetAsset("compassd.png").DiskSource());
 		var pixmap_needle = new QPixmap(asset.GetAsset("needle.png").DiskSource());
 		compass = ui.GraphicsScene().addPixmap(pixmap_compass);
-		var needle = ui.GraphicsScene().addPixmap(pixmap_needle);
+		needle = ui.GraphicsScene().addPixmap(pixmap_needle);
 		compass.setTransformOriginPoint(pixmap_compass.width()/2, pixmap_compass.height()/2);
 	},
 	

@@ -28,6 +28,7 @@ var SlaveClient = Class.extend
 
 		Log("**** Creating slave client objects");
 
+		this.clearScene();
 		this.setWidgetLayout();
 		this.createSlaveClient();
 		this.setSlaveCamera();
@@ -43,7 +44,18 @@ var SlaveClient = Class.extend
 		voidentity.Action("ResetCamerasMsg").Triggered.connect(this, this.ResetCameras);
 		voidentity.Action("LetterBoxMsg").Triggered.connect(this, this.LetterBox);
 		voidentity.Action("_MSG_ROTATE_ARROW_").Triggered.connect(this, this.RotateArrow);
+		voidentity.Action("_MSG_TOGGLE_WIDGETS_").Triggered.connect(this, this.ToggleWidgets);
 	},
+	
+	clearScene: function()
+	{
+		var oldarrow = scene.GetEntityByName("Arrow");
+		if (oldarrow)
+		{
+			scene.RemoveEntity(oldarrow.id,'');
+			Log("**** Old Arrow entity removed");
+		}		
+	},	
 	
 	setWidgetLayout: function()
 	{
@@ -68,6 +80,20 @@ var SlaveClient = Class.extend
 		proxy.y = 10;
 		proxy.x = rect.width()-mainWidget.width-10;
 		mainWidget.setWindowOpacity(0.3);
+	},
+	
+	ToggleWidgets: function(param)
+	{
+		if (param == "HIDE")
+		{
+			proxy.visible = false;
+			arrow3.mesh.RemoveMesh();
+		}
+		else if (param == "SHOW")
+		{
+			proxy.visible = true;
+			arrow3.mesh.meshRef = "assets/Arrow.mesh";
+		}
 	},
 	
 	RotateArrow: function(param)
@@ -225,7 +251,8 @@ var SlaveClient = Class.extend
 	
 	createArrow: function()
 	{
-		arrow3 = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh"]);
+		arrow3 = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh", "EC_Name"]);
+		arrow3.SetName("Arrow");
 		arrow3.mesh.meshRef = "assets/Arrow.mesh";
 		var mats = arrow3.mesh.meshMaterial;
 		mats[0] = "assets/Metal.material";
