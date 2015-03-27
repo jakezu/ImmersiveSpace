@@ -5,14 +5,14 @@
 // !ref: server.js
 // !ref: masterclient.js
 // !ref: slaveclients.js
-// !ref: compassd.png
+// !ref: compass.png
 // !ref: needle.png
-// !ref: arrow3b.png
 */
+
 
 engine.IncludeFile("helpers.js");
 
-var masterclient = "client1";
+var masterclientname = "client1";
 
 // server side part
 if (isServer())
@@ -25,15 +25,13 @@ else if (isClient())
 	engine.ImportExtension("qt.gui");
 	engine.ImportExtension("qt.webkit");
 	
-	//var resolution = new QSize(1280, 800)
-	//ui.MainWindow().size = resolution;
 	// regular expression pattern for matching client name
 	var regexp = /client[2-6]/;
 	
 	var username = client.LoginProperty("username");
 	
 	// match for the masterclient
-	if (username == masterclient) 
+	if (username == masterclientname) 
 		engine.IncludeFile("masterclient.js");
 	
 	// match for the slaveclients
@@ -45,5 +43,3 @@ else if (isClient())
 }
 
 // EOF
-
-

@@ -37,10 +37,10 @@ var SlaveClient = Class.extend
 		
 		// Signals
 		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
-		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
+		///voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
 		voidentity.Action("ChangeFovMsg").Triggered.connect(this, this.ChangeFov);
 		voidentity.Action("ChangeParentEntityRefMsg").Triggered.connect(this, this.setParentEntityRef);
-		voidentity.Action("MoveCamerasMsg").Triggered.connect(this, this.MoveCameras);
+		voidentity.Action("_MSG_SET_CAM_POS").Triggered.connect(this, this.MoveCameras);
 		voidentity.Action("ResetCamerasMsg").Triggered.connect(this, this.ResetCameras);
 		voidentity.Action("LetterBoxMsg").Triggered.connect(this, this.LetterBox);
 		voidentity.Action("_MSG_ROTATE_ARROW_").Triggered.connect(this, this.RotateArrow);
@@ -195,6 +195,7 @@ var SlaveClient = Class.extend
 		proxy.x = rect.width()-mainWidget.width-10;
 	},	
 	
+	/*
 	ChangeForwardDirection: function(sector)
 	{
 		ui.GraphicsScene().removeItem(arrow);
@@ -206,7 +207,8 @@ var SlaveClient = Class.extend
 		}
 		else
 			widget2.text = "Direction of travel: client"+ID;
-	},	
+	},
+	*/	
 
 	// Create SlaveClient-entity which gets placeable data from the server
 	createSlaveClient: function()
@@ -273,6 +275,7 @@ var SlaveClient = Class.extend
 		widget2.text = arrow3.placeable.transform;
 	},	
 	
+	/*
 	drawForwardIndicator: function(angle)
 	{
 		pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
@@ -280,6 +283,7 @@ var SlaveClient = Class.extend
 		rect = ui.GraphicsScene().sceneRect;
 		arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
 	},
+	*/
 	
 	// Remove FreeLookCamera from the scene
 	removeFreeLookCamera: function()

@@ -1,6 +1,6 @@
 engine.IncludeFile("local://class.js"); // from jsmodules/lib
 
-var _p = null;
+var _serverInstance = null;
 var _applicationName = "ImmersiveSpaceApplication";
 
 var Server = Class.extend
@@ -23,7 +23,7 @@ var Server = Class.extend
 	
 	createVoidEntity: function()
 	{
-		voidentity = scene.CreateEntity(scene.NextFreeId(), /* NextFreeId() for replicated */
+		var voidentity = scene.CreateEntity(scene.NextFreeId(), /* NextFreeId() for replicated */
 						["EC_Placeable", "EC_Camera"],      /* Components */
 						'',                                 /* AttributeChange enum, 2 for LocalOnly, 3 for replicated. */
 						replicated=true,                    /* Replicate entity to server and other clients */
@@ -49,6 +49,6 @@ var Server = Class.extend
 });
 
 // Startup
-_p = new Server();
+_serverInstance = new Server();
 
 // EOF
