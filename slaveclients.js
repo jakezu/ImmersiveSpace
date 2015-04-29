@@ -1,27 +1,39 @@
-engine.IncludeFile("local://class.js"); // from jsmodules/lib
+var _slaveClientInstance = null;
+var voidEntity = scene.GetEntityByName("Void");
+var slaveClient; // SlaveClient entity
+var slaveCamera; // Camera component of SlaveClient entity
+var slaveTransform; // Variable for transform function of Slave Client's placeable component
+var DEFAULT_SECT = 1; // Global value for sector of direction of travel
+var DEFAULT_FOV = 38.5; // Global value for Field of vision (45 = default, 38.5 is good in one particular setup)
+var sector = DEFAULT_SECT; // Set initial value for sector of direction of travel
+var fov = DEFAULT_FOV; // Set initial value of fov
+var mainWidget = new QWidget(); // Info layout widget for showing additional information
+var widget1 = new QLabel(); // Info widget #1
+var widget2 = new QLabel(); // Info widget #2
+var widget3 = new QLabel(); // Info widget #3
+var widget4 = new QLabel(); // Info widget #4
+var widget5 = new QLabel(); // Info widget #5
+var infoWidgetProxy; // Info widget proxy layer
+var block_size = 0; // Letter box initial size
+var block_left = new QGraphicsPolygonItem(); // Left letter box
+var block_right = new QGraphicsPolygonItem(); // Right letter box
 
-var _p = null;
-var voidentity = scene.GetEntityByName("Void");
-var slaveclient;
-var slavecamera;
-var sector = 1;
-var fov = 38.5; // Field of vision (45 = default, 38.5 is good in one particular setup)
-var pixmap_arrow = new QPixmap();
-var arrow = new QPixmap();
-var client_ID;
-var proxy = new UiProxyWidget();
-var mainWidget = new QWidget();
-var widget1 = new QLabel();
-var widget2 = new QLabel();
-var widget3 = new QLabel();
-var widget4 = new QLabel();
-var widget5 = new QLabel();
-var block_size = 0;
-var block_a = new QGraphicsPolygonItem();
-var block_b = new QGraphicsPolygonItem();
-var arrow3;
+// Get client's ID number
+var regexp = /\d/; // match number
+var client_ID = regexp.exec(client.LoginProperty("username"));
 
-var SlaveClient = Class.extend
+// Get angle for 3D Arrow position calculations in radians. Angle is different at each client
+var a3DAng = (client_ID - 1)*60*Math.PI/180;
+
+var arrow3D; // 3D arrow entity
+var arrow3DTransform; // Variable for transform function of 3D Arrow's placeable component
+var DEFAULT_A3D_POS = new float3(3*Math.sin(a3DAng), -0.9, -3*Math.cos(a3DAng));
+var DEFAULT_A3D_ROT = new float3(0,-90,0); // Initial value of 3D Arrow's rotation
+var DEFAULT_A3D_SA = new float3(0.1,0.01,0.1); // Initial value of 3D Arrow's scale
+var camAng; // Variable for trigonometric calculations of camera in radians
+
+
+var SlaveClass = Class.extend
 ({
 	init: function()
 	{
@@ -35,18 +47,20 @@ var SlaveClient = Class.extend
 		this.createArrow();
 		this.removeFreeLookCamera();
 		
-		// Signals
+		// Connect global messages to corresponding slots
 		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
-		///voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
-		voidentity.Action("ChangeFovMsg").Triggered.connect(this, this.ChangeFov);
-		voidentity.Action("ChangeParentEntityRefMsg").Triggered.connect(this, this.setParentEntityRef);
-		voidentity.Action("_MSG_SET_CAM_POS").Triggered.connect(this, this.MoveCameras);
-		voidentity.Action("ResetCamerasMsg").Triggered.connect(this, this.ResetCameras);
-		voidentity.Action("LetterBoxMsg").Triggered.connect(this, this.LetterBox);
-		voidentity.Action("_MSG_ROTATE_ARROW_").Triggered.connect(this, this.RotateArrow);
-		voidentity.Action("_MSG_TOGGLE_WIDGETS_").Triggered.connect(this, this.ToggleWidgets);
+		voidEntity.Action("MSG_FOV_CHG").Triggered.connect(this, this.ChangeFov);
+		voidEntity.Action("MSG_PARENT_ENTITY_REF_CHG").Triggered.connect(this, this.setParentEntityRef);
+		voidEntity.Action("MSG_MOVE_CAM").Triggered.connect(this, this.MoveCameras);
+		voidEntity.Action("MSG_RESET_CAMERAS").Triggered.connect(this, this.ResetCameras);
+		voidEntity.Action("MSG_LETTER_BOX").Triggered.connect(this, this.LetterBox);
+		voidEntity.Action("MSG_ROTATE_ARROW").Triggered.connect(this, this.RotateArrow);
+		voidEntity.Action("MSG_TOGGLE_WIDGETS").Triggered.connect(this, this.ToggleWidgets);
+		voidEntity.Action("MSG_STATUSMSG").Triggered.connect(this, this.UpdateStatus);
 	},
 	
+	// Clear scene if there is already 3D Arrow entity.
+	// This occurs if Script is reloaded without quitting it first
 	clearScene: function()
 	{
 		var oldarrow = scene.GetEntityByName("Arrow");
@@ -55,7 +69,7 @@ var SlaveClient = Class.extend
 			scene.RemoveEntity(oldarrow.id,'');
 			Log("**** Old Arrow entity removed");
 		}		
-	},	
+	},
 	
 	setWidgetLayout: function()
 	{
@@ -69,16 +83,14 @@ var SlaveClient = Class.extend
 		layout.addWidget(widget5, 0, 1);
         layout.setContentsMargins(10,0,10,5);
         layout.setSpacing(2);
-		proxy = ui.AddWidgetToScene(mainWidget);
-		//mainWidget.setStyleSheet("QLabel {background-color: transparent; color: black; font-size: 16px; opacity: 0,2;}");
+		infoWidgetProxy = ui.AddWidgetToScene(mainWidget);
 		mainWidget.setStyleSheet("QLabel {color: black; font-size: 14px;}");
 		widget1.setStyleSheet("QLabel {color: blue; font-size: 18px; font-weight: bold;}");
 		rect = ui.GraphicsScene().sceneRect;
-		//proxy.windowFlags = Qt.Widget;
-		proxy.windowFlags = 0;
-		proxy.visible = true;
-		proxy.y = 10;
-		proxy.x = rect.width()-mainWidget.width-10;
+		infoWidgetProxy.windowFlags = 0;
+		infoWidgetProxy.visible = true;
+		infoWidgetProxy.y = 10;
+		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
 		mainWidget.setWindowOpacity(0.3);
 	},
 	
@@ -86,27 +98,27 @@ var SlaveClient = Class.extend
 	{
 		if (param == "HIDE")
 		{
-			proxy.visible = false;
-			arrow3.mesh.RemoveMesh();
+			infoWidgetProxy.visible = false;
+			arrow3D.mesh.RemoveMesh();
 		}
 		else if (param == "SHOW")
 		{
-			proxy.visible = true;
-			arrow3.mesh.meshRef = "assets/Arrow.mesh";
+			infoWidgetProxy.visible = true;
+			arrow3D.mesh.meshRef = "assets/Arrow.mesh";
 		}
 	},
 	
 	RotateArrow: function(param)
 	{
-		var trans = arrow3.placeable.transform;
-		trans.rot.y = -90-param;		
-		arrow3.placeable.transform = trans;
+		arrow3DTransform = arrow3D.placeable.transform;
+		arrow3DTransform.rot.y = -90-param;
+		arrow3D.placeable.transform = arrow3DTransform;
 	},
 	
 	LetterBox: function(size) 
 	{
-		ui.GraphicsScene().removeItem(block_a);
-		ui.GraphicsScene().removeItem(block_b);
+		ui.GraphicsScene().removeItem(block_left);
+		ui.GraphicsScene().removeItem(block_right);
 		if (size!=0)
 		{
 			var color = new QColor("black");
@@ -114,114 +126,100 @@ var SlaveClient = Class.extend
 			var height = mainwin.size.height();
 			var width = mainwin.size.width();
 			
-			var point_a1 = new QPointF(0,0);
-			var point_a2 = new QPointF(size,0);
-			var point_a3 = new QPointF(size,height);
-			var point_a4 = new QPointF(0,height);
-			var points_a = new Array(point_a1, point_a2, point_a3, point_a4);
-			var qpoly_a = new QPolygon(points_a);
-			var poly_a = new QPolygonF(qpoly_a);
+			var point_left1 = new QPointF(0,0);
+			var point_left2 = new QPointF(size,0);
+			var point_left3 = new QPointF(size,height);
+			var point_left4 = new QPointF(0,height);
+			var points_left = new Array(point_left1, point_left2, point_left3, point_left4);
+			var qpoly_left = new QPolygon(points_left);
+			var poly_left = new QPolygonF(qpoly_left);
 			
-			var point_b1 = new QPointF(width,0);
-			var point_b2 = new QPointF(width-size,0);
-			var point_b3 = new QPointF(width-size,height);
-			var point_b4 = new QPointF(width,height);
-			var points_b = new Array(point_b1, point_b2, point_b3, point_b4);
-			var qpoly_b = new QPolygon(points_b);
-			var poly_b = new QPolygonF(qpoly_b);
+			var point_right1 = new QPointF(width,0);
+			var point_right2 = new QPointF(width-size,0);
+			var point_right3 = new QPointF(width-size,height);
+			var point_right4 = new QPointF(width,height);
+			var points_right = new Array(point_right1, point_right2, point_right3, point_right4);
+			var qpoly_right = new QPolygon(points_right);
+			var poly_right = new QPolygonF(qpoly_right);
 			
-			block_a = new QGraphicsPolygonItem(poly_a, 0, scene);	
-			block_b = new QGraphicsPolygonItem(poly_b, 0, scene);	
-			block_a.setBrush(color);
-			block_b.setBrush(color);
-			block_a.setOpacity(1.0);
-			block_b.setOpacity(1.0);
-			ui.GraphicsScene().addItem(block_a);
-			ui.GraphicsScene().addItem(block_b);
+			block_left = new QGraphicsPolygonItem(poly_left, 0, scene);	
+			block_right = new QGraphicsPolygonItem(poly_right, 0, scene);	
+			block_left.setBrush(color);
+			block_right.setBrush(color);
+			block_left.setOpacity(1.0);
+			block_right.setOpacity(1.0);
+			ui.GraphicsScene().addItem(block_left);
+			ui.GraphicsScene().addItem(block_right);
 		}
 	},	
 	
 	MoveCameras: function(param)
 	{
-		trans = slaveclient.placeable.transform;
-		var radians = sector*60*Math.PI/180;
+		slaveTransform = slaveClient.placeable.transform;
+		camAng = sector*60*Math.PI/180;
 		if (param == "forward") 
 		{
-			trans.pos.z -= Math.cos(radians);    
-			trans.pos.x += Math.sin(radians);    
-			slaveclient.placeable.transform = trans;
+			slaveTransform.pos.z -= Math.cos(camAng);    
+			slaveTransform.pos.x += Math.sin(camAng);    
+			slaveClient.placeable.transform = slaveTransform;
 		}
 		else if (param == "backward") 
 		{
-			trans.pos.z += Math.cos(radians);    
-			trans.pos.x -= Math.sin(radians);    
-			slaveclient.placeable.transform = trans; 
+			slaveTransform.pos.z += Math.cos(camAng);    
+			slaveTransform.pos.x -= Math.sin(camAng);    
+			slaveClient.placeable.transform = slaveTransform; 
 		}
-		widget2.text = "Camera new z position: "+(-trans.pos.z);
-		slavecamera.SetActive();
+		//widget5.text = "Camera new z position: "+(-slaveTransform.pos.z);
+		slaveCamera.SetActive();
 	},
 	
 	ResetCameras: function()
 	{
-		//var camera = scene.GetEntityByName("ClientCamera");
-		//trans = camera.placeable.transform;
-		trans = slaveclient.placeable.transform;
-		trans.pos.z = 0;
-		trans.pos.x = 0;
-		slaveclient.placeable.transform = trans; 
-		slavecamera.SetActive();
-		//debug("Z: "+(-trans.pos.z));
-		widget2.text = "Cameras' positions reseted";
+		fov = DEFAULT_FOV;
+		slaveCamera.verticalFov = DEFAULT_FOV;
+		arrow3DTransform = arrow3D.placeable.transform;
+		arrow3DTransform.rot = DEFAULT_A3D_ROT;
+		arrow3DTransform.pos = DEFAULT_A3D_POS;
+		arrow3D.placeable.transform = arrow3DTransform;
+		slaveClient.placeable.SetPosition(new float3(0,0,0));
+		//widget5.text = "CAMERAS SET TO INITIAL STATE";		
 	},		
 	
 	setParentEntityRef: function(attribute)
 	{
 		var entity = scene.GetEntityRaw(attribute);
-		widget2.text = "Parent entity reference: " + entity.name;
-		slaveclient.placeable.SetParent(entity, preserveWorldTransform=false);
+		//widget5.text = "Parent entity reference: " + entity.name;
+		slaveClient.placeable.SetParent(entity, preserveWorldTransform=false);
 	},
 
 	ChangeFov: function(fov)
 	{
-		slavecamera.verticalFov = fov;
-		//widget5.text = "Field of vision: "+fov.toFixed(2);
-		widget5.text = "Field of vision: "+fov;
+		slaveCamera.verticalFov = fov;
+		//widget5.text = "Field of vision: "+fov;
 	},
+	
+	WindowResizeListener: function(widg, callbackFunction)
+	{
+		widg.WindowResized = callbackFunction;
+		var graphScene = ui.GraphicsScene().scene();
+		graphScene.sceneRectChanged.connect(widg, widg.WindowResized);		
+	},	
 	
 	windowResized: function(rect)
 	{
-		if (!arrow.isNull)
-			arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
-		proxy.x = rect.width()-mainWidget.width-10;
+		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
 	},	
 	
-	/*
-	ChangeForwardDirection: function(sector)
-	{
-		ui.GraphicsScene().removeItem(arrow);
-		var ID = parseInt(sector)+1;
-		if (ID == client_ID) // SlaveClient's ID
-		{
-			this.drawForwardIndicator();
-			widget2.text = "Direction of travel";
-		}
-		else
-			widget2.text = "Direction of travel: client"+ID;
-	},
-	*/	
 
 	// Create SlaveClient-entity which gets placeable data from the server
 	createSlaveClient: function()
 	{
-		slaveclient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
-
-		//slaveclient.SetName("SlaveClient");
-		slaveclient.SetName("SlaveCamera");
-		slaveclient.SetTemporary(true);
-		var placeable = slaveclient.placeable;
+		slaveClient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
+		slaveClient.SetName("SlaveCamera");
+		slaveClient.SetTemporary(true);
 		
 		// set parenting reference to the Server's Void-entity
-		placeable.SetParent(voidentity, preserveWorldTransform=false);
+		slaveClient.placeable.SetParent(voidEntity, preserveWorldTransform=false);
 		
 		Log("**** SlaveClient entity has been created with placeable, camera and name components");
 	},
@@ -229,61 +227,37 @@ var SlaveClient = Class.extend
 	// Set SlaveCamera parameters
 	setSlaveCamera: function()
 	{
-		slavecamera = slaveclient.camera;
-		var placeable = slaveclient.placeable;
-		var transform = placeable.transform;
+		slaveCamera = slaveClient.camera;
+		slaveTransform = slaveClient.placeable.transform;
+		slaveCamera.verticalFov = fov;
 		
-		slavecamera.verticalFov = fov;
-		
-		// Get client's ID number
-		var regexp = /\d/;
-		client_ID = regexp.exec(client.LoginProperty("username"));
 		widget1.text = "Client" + client_ID + " (SlaveClient)";
 		
 		// Rotate camera by ID * 60 degrees (when rotated to clockwise, negative y-axis value is needed)
-		//transform.rot.y = -(client_ID-1) * 60;
-		transform.rot.y = -(client_ID-1) * 60;
-		placeable.transform = transform;
-		
-		slavecamera.SetActive();
+		slaveTransform.rot.y = -(client_ID-1) * 60;
+		slaveClient.placeable.transform = slaveTransform;
+		slaveCamera.SetActive();
 		
 		Log("**** SlaveCamera has been set and rotated by " + (client_ID-1)*60 + " degrees clockwise");
 		
 	},
 	
+	
 	createArrow: function()
 	{
-		arrow3 = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh", "EC_Name"]);
-		arrow3.SetName("Arrow");
-		arrow3.mesh.meshRef = "assets/Arrow.mesh";
-		var mats = arrow3.mesh.meshMaterial;
+		arrow3D = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh", "EC_Name"]);
+		arrow3D.SetName("Arrow");
+		arrow3D.mesh.meshRef = "assets/Arrow.mesh";
+		var mats = arrow3D.mesh.meshMaterial;
 		mats[0] = "assets/Metal.material";
-		arrow3.mesh.meshMaterial = mats;
-		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
-		//arrow3.placeable.SetPosition(0,-2,-7);
-		var radians = (client_ID - 1)*60*Math.PI/180;
-		var trans = arrow3.placeable.transform;
-		trans.pos.z = -3*Math.cos(radians);    
-		trans.pos.x = 3*Math.sin(radians);  
-		//trans.pos.y = -.25;
-		trans.pos.y = -.9;
-		trans.rot.y = -90;
-		trans.scale.x = 0.1;
-		trans.scale.z = 0.1;
-		trans.scale.y = 0.01;		
-		arrow3.placeable.transform = trans;
-		widget2.text = arrow3.placeable.transform;
+		arrow3D.mesh.meshMaterial = mats; 
+		arrow3D.placeable.SetParent(voidEntity, preserveWorldTransform=false);
+		arrow3DTransform = arrow3D.placeable.transform;
+		arrow3DTransform.pos = DEFAULT_A3D_POS;
+		arrow3DTransform.rot = DEFAULT_A3D_ROT;
+		arrow3DTransform.scale = DEFAULT_A3D_SA;
+		arrow3D.placeable.transform = arrow3DTransform; // set transformation	
 	},	
-	
-	/*
-	drawForwardIndicator: function(angle)
-	{
-		pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
-		arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
-		rect = ui.GraphicsScene().sceneRect;
-		arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
-	},
-	*/
 	
 	// Remove FreeLookCamera from the scene
 	removeFreeLookCamera: function()
@@ -295,11 +269,16 @@ var SlaveClient = Class.extend
 			scene.RemoveEntity(freelookcamera.id,'');
 			Log("**** FreeLookCamera entity removed");
 		}
-	}	
+	},
+	
+	UpdateStatus: function(text)
+	{
+		widget5.text = text;
+	}
 	
 });
 
 // Startup
-_p = new SlaveClient();
+_slaveClientInstance = new SlaveClass();
 
 // EOF

@@ -1,5 +1,3 @@
-engine.IncludeFile("local://class.js"); // from jsmodules/lib
-
 var _serverInstance = null;
 var _applicationName = "ImmersiveSpaceApplication";
 
@@ -19,30 +17,30 @@ var Server = Class.extend
         
         // Remove FreeLookCamera from the scene
         this.removeFreeLookCamera();
-    },
+    },x
 	
 	createVoidEntity: function()
 	{
-		var voidentity = scene.CreateEntity(scene.NextFreeId(), /* NextFreeId() for replicated */
-						["EC_Placeable", "EC_Camera"],      /* Components */
-						'',                                 /* AttributeChange enum, 2 for LocalOnly, 3 for replicated. */
-						replicated=true,                    /* Replicate entity to server and other clients */
-						componentsReplicated=true);         /* Replicate components to server and other clients */
+		var voidEntity = scene.CreateEntity(scene.NextFreeId(), /* NextFreeId() for replicated */
+						["EC_Placeable", "EC_Camera"],      	/* Components */
+						'',                                 	/* AttributeChange enum, 2 for LocalOnly, 3 for replicated. */
+						replicated=true,                    	/* Replicate entity to server and other clients */
+						componentsReplicated=true);         	/* Replicate components to server and other clients */
 
-		voidentity.SetName("Void");
-		voidentity.SetTemporary(true);
-		voidentity.camera.SetActive();
+		voidEntity.SetName("Void");
+		voidEntity.SetTemporary(true);
+		voidEntity.camera.SetActive();
 		Log("**** Replicated server entity has been created with placeable component");
 	},
 	
 	removeFreeLookCamera: function()
 	{
-		var freelookcamera = scene.GetEntityByName("FreeLookCamera");
+		var freeLookCamera = scene.GetEntityByName("FreeLookCamera");
 		
-		if (freelookcamera)
+		if (freeLookCamera)
 		{
-			freelookcameraID = freelookcamera.Id();
-			scene.RemoveEntity(freelookcameraID,'');
+			freeLookCameraID = freeLookCamera.Id();
+			scene.RemoveEntity(freeLookCameraID,'');
 			Log("**** FreeLookCamera entity removed");
 		}
 	}

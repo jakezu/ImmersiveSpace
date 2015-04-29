@@ -5,12 +5,19 @@
 // !ref: server.js
 // !ref: masterclient.js
 // !ref: slaveclients.js
-// !ref: compass.png
-// !ref: needle.png
+// !ref: assets/class.js
+// !ref: assets/compass.png
+// !ref: assets/needle.png
+// !ref: assets/metal1.png
+// !ref: assets/Metal.material
+// !ref: assets/Arrow.mesh
+// !ref: assets/Arrow.mesh.xml
+// !ref: assets/needle.png
 */
 
 
 engine.IncludeFile("helpers.js");
+engine.IncludeFile("assets/class.js"); // copied
 
 var masterclientname = "client1";
 
