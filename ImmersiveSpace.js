@@ -1,6 +1,6 @@
 /* ImmersiveSpace.js */
 
-/*
+/* Reference files
 // !ref: helpers.js
 // !ref: server.js
 // !ref: masterclient.js
@@ -15,38 +15,116 @@
 // !ref: assets/needle.png
 */
 
+var _loaderInstance = null;
+var masterClientName = "client1";
+
+/**
+Includes another javascript files.
+@method engine.IncludeFile
+@param file {String} File name
+*/
 
 engine.IncludeFile("helpers.js");
-engine.IncludeFile("assets/class.js"); // copied
+engine.IncludeFile("assets/class.js");
 
-var masterclientname = "client1";
+/**
+The loader class.
+@class LoaderClass
+@extension Class
+@constructor
+*/
 
-// server side part
-if (isServer())
-	engine.IncludeFile("server.js");
+var LoaderClass = Class.extend
+({
+	/**
+	Main class initialisation.
+	@method init
+	@static
+	*/
+	
+	init: function()
+	{
+	
+		/**
+		File which we want to include.
+		@property file
+		@type String
+		*/
+		
+		/** 
+		Checks if this instance is running as a server.
+		@method isServer
+		*/
+		
+		if (isServer())
+			file = "server.js";
+		
+		/**
+		Checks if this instance is running as a client.
+		@method isClient
+		*/
+		else if (isClient())
+		{
+			/**
+			Regular expression pattern for matching slaveclient name
+			@property regexp
+			@type regular expression string
+			@static
+			@final
+			*/
+			var regexp = /client[2-6]/;
+			
+			/**
+			@method client.LoginProperty
+			@param username {String} Returns username from login properties
+			@return {String} Username
+			*/
+			var username = client.LoginProperty("username");
+			
+			// match for the masterclient
+			if (username == masterClientName) 
+				file = "masterclient.js";
+			
+			/**
+			Use regular expression to match for the slaveclients name.
+			@method username.match
+			@param regexp {Regular expression string} Returns true if match
+			@return {Boolean} Boolean value
+			*/
+			else if (username.match(regexp))
+				file = "slaveclients.js";
 
-// clients part
-else if (isClient())
-{
-	engine.ImportExtension("qt.core");
-	engine.ImportExtension("qt.gui");
-	engine.ImportExtension("qt.webkit");
-	
-	// regular expression pattern for matching client name
-	var regexp = /client[2-6]/;
-	
-	var username = client.LoginProperty("username");
-	
-	// match for the masterclient
-	if (username == masterclientname) 
-		engine.IncludeFile("masterclient.js");
-	
-	// match for the slaveclients
-	else if (username.match(regexp))
-		engine.IncludeFile("slaveclients.js");
-	
-	else
-		console.LogError("Username invalid!");
-}
+			else
+			{
+				/**
+				Outputs log error message.
+				@method LogError
+				@param string {String} Text to output
+				*/
+				LogError("Client's username '" + username + "' invalid!");
+				return;
+			}
+			
+			/**
+			Imports Qt extensions.
+			@method engine.ImportExtension
+			@param file {String} Qt extension file name
+			*/			
+			engine.ImportExtension("qt.core");
+			engine.ImportExtension("qt.gui");
+			engine.ImportExtension("qt.webkit");			
+		}
 
-// EOF
+		/**
+		Outputs log message.
+		@method Log
+		@param string {String} Text to output
+		*/
+		Log(file + " has been included");
+
+		engine.IncludeFile(file);
+	}
+});
+
+// Startup
+_loaderInstance = new LoaderClass();

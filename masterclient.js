@@ -1,8 +1,6 @@
-engine.ImportExtension("qt.core");
-engine.ImportExtension("qt.gui");
-engine.ImportExtension("qt.webkit");
+/* masterclient.js /*
 
-// Globals, etc and their initial values
+/* Globals and their initial values */
 var _masterClientInstance = null;
 var masterClient; // MasterClient entity
 var masterCamera; // Camera component of MasterClient entity
@@ -44,7 +42,11 @@ var DEFAULT_A3D_ROT = new float3(0,-90,0); // Initial value of 3D Arrow's rotati
 var DEFAULT_A3D_SA = new float3(0.1,0.01,0.1); // Initial value of 3D Arrow's scale
 var radians; // Variable for trigonometric calculations
  
-
+/**
+ * Movement modifier.
+ * @method _g
+ */
+ 
 var _g =
 {
 	connected : false,
@@ -60,37 +62,40 @@ var _g =
 	motion : new float3(0,0,0),
 };
 
+/**
+The MasterClass class.
+@class MasterClass
+@extension LoaderClass
+@constructor
+*/
 
 var MasterClass = Class.extend
 ({
+	/**
+	 * Master class initialisation.
+	 * @method init
+	 * @static 
+	 */
+	 
 	init: function()
 	{
 
-		// Connect frame updates and enable inputmapper
-		frame.Updated.connect(this, this.Update);
-		
-		/*
-		//testi
-		profiler.BeginBlock("TESTI");
-		frame.DelayedExecute(4.0).Triggered.connect(OnDelayedExecution);
-		function OnDelayedExecution()
-		{
-			if (widget5.text)
-				widget5.text = "";
-			else
-				widget5.text="This text is printed every two seconds.";
-			frame.DelayedExecute(4.0).Triggered.connect(OnDelayedExecution);
-		}
-		profiler.EndBlock();
-		*/
-		
+		/**
+		 * Connect frame updates.
+		 * @event frame.Updated.connect
+		 * @param Update {Object} Function to invoke
+		 */
+		 
+		//frame.Updated.connect(this, this.Update);
+		frame.Updated.connect(this.Update);
+	
 		Log("**** Creating master client objects");
 
 		this.clearScene();
 		this.setInfoWidgetLayout();
 		this.removeFreeLookCamera();
 		this.createMasterClient();
-		this.createArrow();
+		this.create3DArrow();
 		this.setMasterCamera();
 		this.setSpawnPoint();
 		this.createInputHandler();
@@ -98,35 +103,98 @@ var MasterClass = Class.extend
 		this.showInfoWidgetDefaultValues();
 		this.helpWidget();
 		
-		// Connect global messages to corresponding slots
-		voidEntity.Action("MSG_MOVE_CAM").Triggered.connect(this, this.MoveCameras); // Move camera forward/backward
-		voidEntity.Action("MSG_LETTER_BOX").Triggered.connect(this, this.LetterBox); // Resize black block sizes on screen edges
-		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized); // Redraw InfoWidget if window size resized
-        masterClient.placeable.AttributeChanged.connect(this, this.ParentEntityRefChanged);	// If user changes parent entity reference this function is called
-		voidEntity.Action("MSG_STATUSMSG").Triggered.connect(this, this.UpdateStatus); // Sending status messages to widget5
+		/**
+		 * Connect camera movement handler.
+		 * @event voidEntity.Action("MSG_MOVE_CAM").Triggered.connect
+		 * @param MoveCameras {Object} Function to invoke
+		 */
+		voidEntity.Action("MSG_MOVE_CAM").Triggered.connect(this.MoveCameras);
+
+		/**
+		 * Connect screen letterbox size handler.
+		 * @event voidEntity.Action("MSG_LETTER_BOX").Triggered.connect
+		 * @param LetterBox {Object} Function to invoke
+		 */
+		voidEntity.Action("MSG_LETTER_BOX").Triggered.connect(this.LetterBox);
+
+		/**
+		 * Connect status message handler.
+		 * @event voidEntity.Action("MSG_STATUSMSG").Triggered.connect
+		 * @param UpdateStatus {Object} Function to invoke
+		 */
+		voidEntity.Action("MSG_STATUSMSG").Triggered.connect(this.UpdateStatus); // 
+		
+		/**
+		 * Connect window resize listener.
+		 * @event ui.GraphicsScene().sceneRectChanged.connect
+		 * @param windowResized {Object} Function to invoke
+		 */		
+		ui.GraphicsScene().sceneRectChanged.connect(this.windowResized);
+		
+		/**
+		 * Connect attribute change listener.
+		 * @event  masterClient.placeable.AttributeChanged.connect
+		 * @param ParentEntityRefChanged {Object} Function to invoke
+		 */		
+        masterClient.placeable.AttributeChanged.connect(this.ParentEntityRefChanged);	// If user changes parent entity reference this function is called
 	},
 	
-	// Clears duplicates from scene if Script is reloaded
+	/**
+	 * Clears duplicates from scene if Script is reloaded
+	 * @method clearScene
+	 */
 	clearScene: function()
 	{
-		var ui_item = ui.GraphicsScene().items();
-		for (var i=0; i < ui_item.length; i++)
+		/**
+		 * Get array of scene items.
+		 * @method ui.GraphicsScene().items
+		 * @return {Array} ui_items.
+		 */
+		 
+		var ui_items = ui.GraphicsScene().items();
+		for (var i=0; i < ui_items.length; i++)
 		{
-			if (ui_item[i].type() == 5 || ui_item[i].type() == 7) // 5=letter box, 7=compass
+			if (ui_items[i].type() == 5 || ui_items[i].type() == 7) // 5=letter box, 7=compass
 			{
-				ui.GraphicsScene().removeItem(ui_item[i]);
-				Log("**** Removed: " +ui_item[i]);
+				/**
+				 * Remove item.
+				 * @method ui.GraphicsScene().removeItem
+				 * @param param {Object} Item to remove
+				 */			
+				ui.GraphicsScene().removeItem(ui_items[i]);
+				
+				Log("**** Removed: " +ui_items[i]);
 			}
 		}
-		var oldarrow = scene.GetEntityByName("Arrow");
-		if (oldarrow)
+		
+		/**
+		 * Get entity by name.
+		 * @method scene.GetEntityByName
+		 * @param name {String} Entity name to get
+		 * @return {Object} Arrow.
+		 */	
+		
+		var oldArrow = scene.GetEntityByName("Arrow");
+		if (oldArrow)
 		{
-			scene.RemoveEntity(oldarrow.id,'');
+			/**
+			 * Remove (old) Arrow entity if found
+			 * @method scene.RemoveEntity
+			 * @param oldArrow.Id {Number} Arrow's id number
+			 * @param AttributeChange=Default {Enum} Enumeration of attribute/component change types for replication. (2=LocalOnly, 3=Replicate)
+			 * @return {Boolean} Return true if entity has been found and removed.
+			*/		
+			scene.RemoveEntity(oldArrow.Id(),'');
+			
 			Log("**** Old Arrow entity removed");
 		}		
 	},
 	
 	
+	/**
+	 * Sets and shows Info widget default values.
+	 * @method showInfoWidgetDefaultValues
+	 */
 	showInfoWidgetDefaultValues: function()
 	{
 		widget1.text = "Client1 (MasterClient)";
@@ -136,23 +204,68 @@ var MasterClass = Class.extend
 		widget5.text = "Altitude: "+voidEntity.placeable.transform.pos.y;//.toFixed(2);
 	},
 	
-	createArrow: function()
+	/**
+	 * Create 3D Arrow entity.
+	 * @method create3DArrow
+	 */
+	create3DArrow: function()
 	{
+		/**
+		 * Create 3D Arrow local entity with Placeable, Mesh and Name components.
+		 * @method scene.CreateLocalEntity
+		 * @param components {Array} Creates entity with listed components
+		 */
 		arrow3D = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh", "EC_Name"]);
+
+		/**
+		 * Set 3D arrow entity's name.
+		 * @method arrow3D.SetName
+		 * @param param {String}
+		 */		
 		arrow3D.SetName("Arrow");
+		
+		/**
+		 * Set 3D arrow mesh reference.
+		 * @method arrow3D.mesh.meshRef
+		 * @param param {String} Mesh file name and path
+		 */			
 		arrow3D.mesh.meshRef = "assets/Arrow.mesh";
+
+		/**
+		 * Set 3D arrow mesh material.
+		 * @method arrow3D.mesh.meshMaterial
+		 * @param param {String} Mesh material file name and path
+		 */			
 		var mats = arrow3D.mesh.meshMaterial;
 		mats[0] = "assets/Metal.material";
-		arrow3D.mesh.meshMaterial = mats; 
+		arrow3D.mesh.meshMaterial = mats;
+
+		/**
+		 * Parents 3D arrow entity to Void-entity.
+		 * @method arrow3D.placeable.SetParent
+		 * @param entity {Object} Parenting refers to this entity (Void-entity)
+		 * @param preserveWorldTransform=false {Boolean} When false, the transform attribute of this placeable is treated as the new local
+		 */			
 		arrow3D.placeable.SetParent(voidEntity, preserveWorldTransform=false);
+		
+		/**
+		 * Set 3D arrow transformation to initial position, rotation and scale.
+		 * @method arrow3D.placeable.transform
+		 */			
 		arrow3DTransform = arrow3D.placeable.transform;
 		arrow3DTransform.pos = DEFAULT_A3D_POS;
 		arrow3DTransform.rot = DEFAULT_A3D_ROT;
 		arrow3DTransform.scale = DEFAULT_A3D_SA;
-		arrow3D.placeable.transform = arrow3DTransform; // set transformation
+		arrow3D.placeable.transform = arrow3DTransform; // sets transformation
 	},
 	
 	
+	/**
+	 * Send new parent entity reference value to all slave clients if user changes that.
+	 * @method ParentEntityRefChanged
+	 * @param {} attribute
+	 * @return 
+	 */
 	ParentEntityRefChanged: function(attribute)
 	{
 		if (attribute.name === "Parent entity ref")
@@ -163,6 +276,11 @@ var MasterClass = Class.extend
 		}
 	},
 	
+	/**
+	 * Description
+	 * @method setInfoWidgetLayout
+	 * @return 
+	 */
 	setInfoWidgetLayout: function()
 	{
 		var layout = new QVBoxLayout();
@@ -186,6 +304,11 @@ var MasterClass = Class.extend
 		mainWidget.setWindowOpacity(0.3);
 	},
 	
+	/**
+	 * Description
+	 * @method helpWidget
+	 * @return 
+	 */
 	helpWidget: function()
 	{
 		var helpLabel = new QLabel();
@@ -214,6 +337,12 @@ var MasterClass = Class.extend
 		helperWidgetProxy.visible = true;
 	},
 	
+	/**
+	 * Resize black block sizes on screen edges
+	 * @method LetterBox
+	 * @param {} size
+	 * @return 
+	 */
 	LetterBox: function(size) 
 	{
 		ui.GraphicsScene().removeItem(block_left);
@@ -253,6 +382,12 @@ var MasterClass = Class.extend
 	},
 	
 	// move master camera forward or backward
+	/**
+	 * Description
+	 * @method MoveCameras
+	 * @param {} param
+	 * @return 
+	 */
 	MoveCameras: function(param)
 	{
 		masterTransform = masterClient.placeable.transform;
@@ -276,6 +411,12 @@ var MasterClass = Class.extend
 	},
 	
 	
+	/**
+	 * Description
+	 * @method ChangeForwardDirection
+	 * @param {} sector
+	 * @return 
+	 */
 	ChangeForwardDirection: function(sector)
 	{
 		ui.GraphicsScene().removeItem(arrow);
@@ -289,18 +430,25 @@ var MasterClass = Class.extend
 			widget2.text = "Direction of travel: client"+ID;
 	},
 	
+	/**
+	 * Redraw InfoWidget if window size resized.
+	 * @method windowResized
+	 * @param {} rect
+	 * @return 
+	 */
+	 
 	windowResized: function(rect)
 	{
 		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
 	},
+
 	
-	WindowResizeListener: function(widg, callbackFunction)
-	{
-		widg.WindowResized = callbackFunction;
-		var graphScene = ui.GraphicsScene().scene();
-		graphScene.sceneRectChanged.connect(widg, widg.WindowResized);		
-	},
-	
+	/**
+	 * Description
+	 * @method Update
+	 * @param {} frametime
+	 * @return 
+	 */
 	Update: function(frametime)
 	{
 		profiler.BeginBlock("FreeLookCamera_Update");
@@ -315,13 +463,31 @@ var MasterClass = Class.extend
 		_g.motion.y = _g.move.amount.y * _g.move.sensitivity * frametime;
 		_g.motion.z = _g.move.amount.z * _g.move.sensitivity * frametime;
 		
+		/**
+		 * Returns the orientation of Void-entity placeable's transform.
+		 * @method voidEntity.placeable.Orientation
+		 * @param _g.motion {Array} _g.motion vector multiplied by quaternion of itself
+		 */
+		
 		_g.motion = voidEntity.placeable.Orientation().Mul(_g.motion);
+		
+		/**
+		 * Sets the position of Void-entity placeable's transform.
+		 * @method voidEntity.placeable.SetPosition
+		 * @param _g.motion {Array} Current position added by g_motion
+		 */
+		 
 		voidEntity.placeable.SetPosition(voidEntity.placeable.Position().Add(_g.motion));
 
 		profiler.EndBlock();
 	},
 
 	// Create MasterClient-entity which gives placeable data for the clients
+	/**
+	 * Description
+	 * @method createMasterClient
+	 * @return 
+	 */
 	createMasterClient: function()
 	{
 		masterClient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
@@ -335,6 +501,11 @@ var MasterClass = Class.extend
 	},
 
 	// Set MasterCamera parameters
+	/**
+	 * Description
+	 * @method setMasterCamera
+	 * @return 
+	 */
 	setMasterCamera: function()
 	{
 		masterCamera = masterClient.camera;
@@ -343,6 +514,11 @@ var MasterClass = Class.extend
 	},
 	
 	// Set initial spawn point
+	/**
+	 * Description
+	 * @method setSpawnPoint
+	 * @return 
+	 */
 	setSpawnPoint: function()
 	{
 		voidEntity.placeable.SetPosition(DEFAULT_POS);
@@ -352,6 +528,11 @@ var MasterClass = Class.extend
 	},
 	
 	// Create handler for keyboard and mouse events
+	/**
+	 * Description
+	 * @method createInputHandler
+	 * @return 
+	 */
 	createInputHandler: function()
 	{
 		var inputContext = input.RegisterInputContextRaw("FreeLookCamera", 101);
@@ -363,6 +544,12 @@ var MasterClass = Class.extend
 	},
 	
 	// Handler for key press commands 
+	/**
+	 * Description
+	 * @method HandleKeyPress
+	 * @param {} e
+	 * @return 
+	 */
 	HandleKeyPress: function(e)
 	{
 		radians = (direction)*Math.PI/180;
@@ -494,11 +681,11 @@ var MasterClass = Class.extend
 		// Reset initial state
 		else if (e.keyCode == Qt.Key_R)
 		{
-			this.showInfoWidgetDefaultValues();
 			this.setSpawnPoint();
 			fov = DEFAULT_FOV;
 			direction = DEFAULT_DIR;
 			azimuth = DEFAULT_AZM;
+			sector = DEFAULT_SECT;
 			masterCamera.verticalFov = DEFAULT_FOV;
 			compass.setRotation((voidTransform.rot.y)%360)
 			arrow3DTransform = arrow3D.placeable.transform;
@@ -508,6 +695,7 @@ var MasterClass = Class.extend
 			
 			masterClient.placeable.SetPosition(new float3(0,0,0));
 			//widget5.text = "CAMERAS SET TO INITIAL STATE";
+			this.showInfoWidgetDefaultValues();
 			voidEntity.Exec(5, "MSG_STATUSMSG", "CAMERAS SET TO INITIAL STATE");
 			voidEntity.Exec(4, "MSG_RESET_CAMERAS");
 		}
@@ -567,6 +755,12 @@ var MasterClass = Class.extend
 	},
 	
 	// Handler for key release commands (stop movement)
+	/**
+	 * Description
+	 * @method HandleKeyRelease
+	 * @param {} e
+	 * @return 
+	 */
 	HandleKeyRelease: function(e)
 	{
 	if (e.keyCode == Qt.Key_W && _g.move.amount.z != 0 )
@@ -589,6 +783,12 @@ var MasterClass = Class.extend
 	},
 
 	// Handler for mouse events
+	/**
+	 * Description
+	 * @method HandleMouse
+	 * @param {} e
+	 * @return 
+	 */
 	HandleMouse: function(e)
 	{
 		if (e.IsButtonDown(2) && !input.IsMouseCursorVisible())
@@ -607,16 +807,33 @@ var MasterClass = Class.extend
 	},
 
 	// Handler for mouse x axis relative movement
+	/**
+	 * Description
+	 * @method HandleMouseLookX
+	 * @param {} param
+	 * @return 
+	 */
 	HandleMouseLookX: function(param)
 	{
 		voidTransform = voidEntity.placeable.transform;
 		voidTransform.rot.y -= _g.rotate.sensitivity * parseInt(param);
 		voidEntity.placeable.transform = voidTransform; // sets new rotation
-		compass.setRotation((voidTransform.rot.y)%360);
-		widget2.text = "Azimuth: " +(-(voidTransform.rot.y)%360).toFixed(2);
+		azimuth = -(voidTransform.rot.y)%360;
+		if (azimuth < 0)
+			azimuth = 360 + azimuth;
+		compass.setRotation(-azimuth);
+		//compass.setRotation((voidTransform.rot.y)%360);
+		widget2.text = "Azimuth: " + azimuth.toFixed(2);
+		//widget2.text = "Azimuth: " +(-(voidTransform.rot.y)%360).toFixed(2);
 	},
 
 	// Handler for mouse y axis relative movement
+	/**
+	 * Description
+	 * @method HandleMouseLookY
+	 * @param {} param
+	 * @return 
+	 */
 	HandleMouseLookY: function(param)
 	{
 		voidTransform = voidEntity.placeable.transform;
@@ -629,6 +846,12 @@ var MasterClass = Class.extend
 		voidEntity.placeable.transform = voidTransform;	
 	},
 	
+	/**
+	 * Description
+	 * @method HandleMousePan
+	 * @param {} param
+	 * @return 
+	 */
 	HandleMousePan: function(param)
 	{
 		var increase = param/rect.width()*120;
@@ -643,6 +866,7 @@ var MasterClass = Class.extend
 		else
 			direction = direction+increase;
 		widget3.text = "Direction of travel: " +direction.toFixed(2);
+		widget4.text = "Sector: " + parseInt((direction/60)+1);
 
 		arrow3DTransform = arrow3D.placeable.transform;
 		arrow3DTransform.rot.y = -90-direction;
@@ -650,6 +874,11 @@ var MasterClass = Class.extend
 		voidEntity.Exec(5, "MSG_ROTATE_ARROW", direction);
 	},
 	
+	/**
+	 * Description
+	 * @method drawCompass
+	 * @return 
+	 */
 	drawCompass: function()
 	{
 		var pmCompass = new QPixmap(asset.GetAsset("compass.png").DiskSource());
@@ -660,6 +889,11 @@ var MasterClass = Class.extend
 	},
 	
 	// Remove FreeLookCamera from the scene
+	/**
+	 * Description
+	 * @method removeFreeLookCamera
+	 * @return 
+	 */
 	removeFreeLookCamera: function()
 	{
 		var freelookcamera = scene.GetEntityByName("FreeLookCamera");
@@ -671,6 +905,12 @@ var MasterClass = Class.extend
 		}
 	},
 	
+	/**
+	 * Shows status messages in widget5
+	 * @method UpdateStatus
+	 * @param {} text
+	 * @return 
+	 */
 	UpdateStatus: function(text)
 	{
 		widget5.text = text;

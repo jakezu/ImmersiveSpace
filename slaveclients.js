@@ -32,9 +32,20 @@ var DEFAULT_A3D_ROT = new float3(0,-90,0); // Initial value of 3D Arrow's rotati
 var DEFAULT_A3D_SA = new float3(0.1,0.01,0.1); // Initial value of 3D Arrow's scale
 var camAng; // Variable for trigonometric calculations of camera in radians
 
+/**
+The SlaveClass class.
+@class SlaveClass
+@extension LoaderClass
+@constructor
+*/
 
 var SlaveClass = Class.extend
 ({
+	/**
+	 * Slave class initialisation.
+	 * @method init
+	 * @return 
+	 */
 	init: function()
 	{
 
@@ -61,6 +72,11 @@ var SlaveClass = Class.extend
 	
 	// Clear scene if there is already 3D Arrow entity.
 	// This occurs if Script is reloaded without quitting it first
+	/**
+	 * Description
+	 * @method clearScene
+	 * @return 
+	 */
 	clearScene: function()
 	{
 		var oldarrow = scene.GetEntityByName("Arrow");
@@ -71,6 +87,11 @@ var SlaveClass = Class.extend
 		}		
 	},
 	
+	/**
+	 * Description
+	 * @method setWidgetLayout
+	 * @return 
+	 */
 	setWidgetLayout: function()
 	{
 		var layout = new QVBoxLayout();
@@ -94,6 +115,12 @@ var SlaveClass = Class.extend
 		mainWidget.setWindowOpacity(0.3);
 	},
 	
+	/**
+	 * Description
+	 * @method ToggleWidgets
+	 * @param {} param
+	 * @return 
+	 */
 	ToggleWidgets: function(param)
 	{
 		if (param == "HIDE")
@@ -108,6 +135,12 @@ var SlaveClass = Class.extend
 		}
 	},
 	
+	/**
+	 * Description
+	 * @method RotateArrow
+	 * @param {} param
+	 * @return 
+	 */
 	RotateArrow: function(param)
 	{
 		arrow3DTransform = arrow3D.placeable.transform;
@@ -115,6 +148,12 @@ var SlaveClass = Class.extend
 		arrow3D.placeable.transform = arrow3DTransform;
 	},
 	
+	/**
+	 * Description
+	 * @method LetterBox
+	 * @param {} size
+	 * @return 
+	 */
 	LetterBox: function(size) 
 	{
 		ui.GraphicsScene().removeItem(block_left);
@@ -153,6 +192,12 @@ var SlaveClass = Class.extend
 		}
 	},	
 	
+	/**
+	 * Description
+	 * @method MoveCameras
+	 * @param {} param
+	 * @return 
+	 */
 	MoveCameras: function(param)
 	{
 		slaveTransform = slaveClient.placeable.transform;
@@ -173,6 +218,11 @@ var SlaveClass = Class.extend
 		slaveCamera.SetActive();
 	},
 	
+	/**
+	 * Description
+	 * @method ResetCameras
+	 * @return 
+	 */
 	ResetCameras: function()
 	{
 		fov = DEFAULT_FOV;
@@ -185,6 +235,12 @@ var SlaveClass = Class.extend
 		//widget5.text = "CAMERAS SET TO INITIAL STATE";		
 	},		
 	
+	/**
+	 * Description
+	 * @method setParentEntityRef
+	 * @param {} attribute
+	 * @return 
+	 */
 	setParentEntityRef: function(attribute)
 	{
 		var entity = scene.GetEntityRaw(attribute);
@@ -192,12 +248,25 @@ var SlaveClass = Class.extend
 		slaveClient.placeable.SetParent(entity, preserveWorldTransform=false);
 	},
 
+	/**
+	 * Description
+	 * @method ChangeFov
+	 * @param {} fov
+	 * @return 
+	 */
 	ChangeFov: function(fov)
 	{
 		slaveCamera.verticalFov = fov;
 		//widget5.text = "Field of vision: "+fov;
 	},
 	
+	/**
+	 * Description
+	 * @method WindowResizeListener
+	 * @param {} widg
+	 * @param {} callbackFunction
+	 * @return 
+	 */
 	WindowResizeListener: function(widg, callbackFunction)
 	{
 		widg.WindowResized = callbackFunction;
@@ -205,6 +274,12 @@ var SlaveClass = Class.extend
 		graphScene.sceneRectChanged.connect(widg, widg.WindowResized);		
 	},	
 	
+	/**
+	 * Description
+	 * @method windowResized
+	 * @param {} rect
+	 * @return 
+	 */
 	windowResized: function(rect)
 	{
 		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
@@ -212,6 +287,11 @@ var SlaveClass = Class.extend
 	
 
 	// Create SlaveClient-entity which gets placeable data from the server
+	/**
+	 * Description
+	 * @method createSlaveClient
+	 * @return 
+	 */
 	createSlaveClient: function()
 	{
 		slaveClient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
@@ -225,6 +305,11 @@ var SlaveClass = Class.extend
 	},
 	
 	// Set SlaveCamera parameters
+	/**
+	 * Description
+	 * @method setSlaveCamera
+	 * @return 
+	 */
 	setSlaveCamera: function()
 	{
 		slaveCamera = slaveClient.camera;
@@ -243,6 +328,11 @@ var SlaveClass = Class.extend
 	},
 	
 	
+	/**
+	 * Description
+	 * @method createArrow
+	 * @return 
+	 */
 	createArrow: function()
 	{
 		arrow3D = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh", "EC_Name"]);
@@ -260,6 +350,11 @@ var SlaveClass = Class.extend
 	},	
 	
 	// Remove FreeLookCamera from the scene
+	/**
+	 * Description
+	 * @method removeFreeLookCamera
+	 * @return 
+	 */
 	removeFreeLookCamera: function()
 	{
 		var freelookcamera = scene.GetEntityByName("FreeLookCamera");
@@ -271,6 +366,12 @@ var SlaveClass = Class.extend
 		}
 	},
 	
+	/**
+	 * Description
+	 * @method UpdateStatus
+	 * @param {} text
+	 * @return 
+	 */
 	UpdateStatus: function(text)
 	{
 		widget5.text = text;
