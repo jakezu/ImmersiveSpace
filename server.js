@@ -3,6 +3,7 @@
 var _serverInstance = null;
 var _applicationName = "ImmersiveSpaceApplication";
 
+var voidEntity = null; //added 13.5, can delete after mittaukset
 
 /**
 The ServerClass class.
@@ -10,7 +11,6 @@ The ServerClass class.
 @extension LoaderClass
 @constructor
 */
-
 var ServerClass = Class.extend
 ({
 
@@ -18,8 +18,7 @@ var ServerClass = Class.extend
 	Server class initialisation.
 	@method init
 	@static
-	*/
-	
+	*/	
     init: function()
     {
 		
@@ -30,14 +29,16 @@ var ServerClass = Class.extend
 
         this.createVoidEntity();
         this.removeFreeLookCamera();
+		
+		//frame.Updated.connect(function(){voidEntity.Exec(5, "MSG_STATUSMSG", frame.WallClockTime())});
+		//frame.Updated.connect(function(){voidEntity.Exec(5, "MSG_STATUSMSG", frame.FrameNumber())});
     },
 	
 	/**
 	Create Void-entity with Placeable and Camera components.
 	@method createVoidEntity
 	@static
-	*/
-	
+	*/	
 	createVoidEntity: function()
 	{
 
@@ -58,7 +59,8 @@ var ServerClass = Class.extend
 		var replicated = true;
 		var componentsReplicated = true;
 		
-		var voidEntity = scene.CreateEntity(id, components, attributechange, replicated, components);
+		//var voidEntity = scene.CreateEntity(id, components, attributechange, replicated, components);
+		voidEntity = scene.CreateEntity(id, components, attributechange, replicated, components);
 
 		/**
 		Set Void-entity's name.
@@ -86,8 +88,7 @@ var ServerClass = Class.extend
 	/**
 	Remove FreeLookCamera from the scene.
 	@method removeFreeLookCamera
-	*/
-	
+	*/	
 	removeFreeLookCamera: function()
 	{
 		/**

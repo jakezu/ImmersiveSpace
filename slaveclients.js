@@ -32,6 +32,10 @@ var DEFAULT_A3D_ROT = new float3(0,-90,0); // Initial value of 3D Arrow's rotati
 var DEFAULT_A3D_SA = new float3(0.1,0.01,0.1); // Initial value of 3D Arrow's scale
 var camAng; // Variable for trigonometric calculations of camera in radians
 
+//del after tests
+var FPSlabel = new QLabel();
+var FPSWidgetProxy;
+
 /**
 The SlaveClass class.
 @class SlaveClass
@@ -49,10 +53,13 @@ var SlaveClass = Class.extend
 	init: function()
 	{
 
+		//frame.Updated.connect(function(){widget5.text=frame.WallClockTime()}); //added 13.5
+		
 		Log("**** Creating slave client objects");
 
 		this.clearScene();
 		this.setWidgetLayout();
+		//this.FPS();
 		this.createSlaveClient();
 		this.setSlaveCamera();
 		this.createArrow();
@@ -68,6 +75,7 @@ var SlaveClass = Class.extend
 		voidEntity.Action("MSG_ROTATE_ARROW").Triggered.connect(this, this.RotateArrow);
 		voidEntity.Action("MSG_TOGGLE_WIDGETS").Triggered.connect(this, this.ToggleWidgets);
 		voidEntity.Action("MSG_STATUSMSG").Triggered.connect(this, this.UpdateStatus);
+		voidEntity.Action("MSG_STATUSMSG2").Triggered.connect(this, this.UpdateStatus2);
 	},
 	
 	// Clear scene if there is already 3D Arrow entity.
@@ -114,6 +122,19 @@ var SlaveClass = Class.extend
 		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
 		mainWidget.setWindowOpacity(0.3);
 	},
+	
+	FPS: function()
+	{
+		FPSlabel.setFixedWidth(1000);
+		FPSlabel.setFixedHeight(400);		
+		FPSlabel.setStyleSheet("QLabel {background-color: rgba(0,0,0,0%); color: red; font-size: 180px;}");
+		FPSWidgetProxy = new UiProxyWidget(FPSlabel);
+		FPSWidgetProxy.y = 300;
+		FPSWidgetProxy.x = (rect.width())/2-(FPSlabel.width)/2;
+		FPSWidgetProxy.windowFlags = 0;
+		ui.AddProxyWidgetToScene(FPSWidgetProxy);
+		FPSWidgetProxy.visible = true;
+	},	
 	
 	/**
 	 * Description
@@ -375,6 +396,13 @@ var SlaveClass = Class.extend
 	UpdateStatus: function(text)
 	{
 		widget5.text = text;
+	},
+	
+	UpdateStatus2: function(text)
+	{
+		//Log(text);
+		FPSlabel.text = Math.round(text*100000)/100000;
+		//widget5.text = text;
 	}
 	
 });
