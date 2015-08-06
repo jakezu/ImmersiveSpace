@@ -1,54 +1,121 @@
-engine.IncludeFile("local://class.js"); // from jsmodules/lib
+/* server.js */
 
-var _p = null;
+var _serverInstance = null;
 var _applicationName = "ImmersiveSpaceApplication";
 
-var Server = Class.extend
+var voidEntity = null; //added 13.5, can delete after mittaukset
+
+/**
+The ServerClass class.
+@class ServerClass
+@extension LoaderClass
+@constructor
+*/
+var ServerClass = Class.extend
 ({
+
+	/**
+	Server class initialisation.
+	@method init
+	@static
+	*/	
     init: function()
     {
+		
         if (me.name != _applicationName)
             me.name = _applicationName;
 
-        this.data = {};
-
         Log("**** Creating server objects");
 
-        // Create Void-entity which gives placeable data for the clients
         this.createVoidEntity();
-        
-        // Remove FreeLookCamera from the scene
         this.removeFreeLookCamera();
+		
+		//frame.Updated.connect(function(){voidEntity.Exec(5, "MSG_STATUSMSG", frame.WallClockTime())});
+		//frame.Updated.connect(function(){voidEntity.Exec(5, "MSG_STATUSMSG", frame.FrameNumber())});
     },
 	
+	/**
+	Create Void-entity with Placeable and Camera components.
+	@method createVoidEntity
+	@static
+	*/	
 	createVoidEntity: function()
 	{
-		voidentity = scene.CreateEntity(scene.NextFreeId(), /* NextFreeId() for replicated */
-						["EC_Placeable", "EC_Camera"],      /* Components */
-						'',                                 /* AttributeChange enum, 2 for LocalOnly, 3 for replicated. */
-						replicated=true,                    /* Replicate entity to server and other clients */
-						componentsReplicated=true);         /* Replicate components to server and other clients */
 
-		voidentity.SetName("Void");
-		voidentity.SetTemporary(true);
-		voidentity.camera.SetActive();
+		/**
+		Creates new entity that contains the specified components.
+		@method scene.CreateEntity
+		@param id {Number} Next free ID number
+		@param [components={}] {Object} Creates entity with listed components
+		@param AttributeChange=Default {Enum} Enumeration of attribute/component change types for replication. (2=LocalOnly, 3=Replicate)
+		@param replicated=true {Boolean} Whether entity is replicated to server and other clients
+		@param componentsReplicated=true {Boolean} Whether components will be replicated to server and other clients
+		@return {Object} Void-entity.
+		*/
+		
+		var id = scene.NextFreeId();
+		var components = ["EC_Placeable", "EC_Camera"];
+		var attributechange = '';
+		var replicated = true;
+		var componentsReplicated = true;
+		
+		//var voidEntity = scene.CreateEntity(id, components, attributechange, replicated, components);
+		voidEntity = scene.CreateEntity(id, components, attributechange, replicated, components);
+
+		/**
+		Set Void-entity's name.
+		@method voidEntity.SetName
+		@param param {String}
+		*/
+		voidEntity.SetName("Void");
+		
+		/**
+		Sets Void-entity's temporary value to true
+		@method voidEntity.SetTemporary
+		@param param {Boolean}
+		*/
+		voidEntity.SetTemporary(true);
+		
+		/**
+		Sets Void-entity's camera component active
+		@method voidEntity.camera.SetActive
+		*/		
+		voidEntity.camera.SetActive();
+		
 		Log("**** Replicated server entity has been created with placeable component");
 	},
-	
+
+	/**
+	Remove FreeLookCamera from the scene.
+	@method removeFreeLookCamera
+	*/	
 	removeFreeLookCamera: function()
 	{
-		var freelookcamera = scene.GetEntityByName("FreeLookCamera");
+		/**
+		Get entity by name.
+		@method scene.GetEntityByName
+		@param name {String} Entity name to get
+		@return {Object} FreeLookCamera.
+		*/
+		var freeLookCamera = scene.GetEntityByName("FreeLookCamera");
+
+		/**
+		Remove FreeLookCamera entity if found
+		@method scene.RemoveEntity
+		@param freeLookCamera.Id {Number} FreeLookCamera's id number
+		@param AttributeChange=Default {Enum} Enumeration of attribute/component change types for replication. (2=LocalOnly, 3=Replicate)
+		@return {Boolean} Return true if entity has been found and removed.
+		*/
 		
-		if (freelookcamera)
+		if (freeLookCamera)
 		{
-			freelookcameraID = freelookcamera.Id();
-			scene.RemoveEntity(freelookcameraID,'');
-			Log("**** FreeLookCamera entity removed");
+			if(scene.RemoveEntity(freeLookCamera.Id(),''))
+				Log("**** FreeLookCamera entity removed");
 		}
 	}
 });
 
 // Startup
-_p = new Server();
+_serverInstance = new ServerClass();
 
 // EOF

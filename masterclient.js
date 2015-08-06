@@ -1,194 +1,464 @@
-engine.IncludeFile("local://class.js"); // from jsmodules/lib
+/* masterclient.js /*
 
-engine.ImportExtension("qt.core");
-engine.ImportExtension("qt.gui");
-engine.ImportExtension("qt.webkit");
+/* Globals and their initial values */
+var _masterClientInstance = null;
+var masterClient; // MasterClient entity
+var masterCamera; // Camera component of MasterClient entity
+var masterTransform; // Variable for transform function of Master Client's placeable component
+var DEFAULT_SECT = 1; // Global value for sector of direction of travel
+var DEFAULT_FOV = 38.5; // Global value for Field of vision (45 = default, 38.5 is good in one particular setup)
+var DEFAULT_DIR = 0; // Global value for direction of travel
+var DEFAULT_BEAR = 0.0; // Global value for bearing
+var DEFAULT_AZM = 0.0; // Global value for azimuth
+var DEFAULT_ALT = 20; // Global value for altitude
+var DEFAULT_POS = new float3(0, DEFAULT_ALT, 0); //Global value for spawn point position of Void-entity
+var DEFAULT_ROT = new float3(0, DEFAULT_AZM, 0); //Global value for spawn point rotation of Void-entity
+var sector = DEFAULT_SECT; // Set initial value for sector of direction of travel
+var fov = DEFAULT_FOV; // Set initial value of fov
+var direction = DEFAULT_DIR; // Set initial value of direction of travel
+var bearing = DEFAULT_BEAR; // Set initial value of bearing
+var azimuth = DEFAULT_AZM; // Set initial value of azimuth
+var altitude = DEFAULT_ALT; // Set initial value of altitude
+var voidEntity = scene.GetEntityByName("Void"); // Gets 'Void' entity
+var voidTransform; // Variable for transform function of Void's placeable component
+var compass = new QPixmap(); // Qt Compass object
+var needle = new QPixmap(); // Qt Needle object of Compass
+var mainWidget = new QWidget(); // Info layout widget for showing additional information
+var widget1 = new QLabel(); // Info widget #1
+var widget2 = new QLabel(); // Info widget #2
+var widget3 = new QLabel(); // Info widget #3
+var widget4 = new QLabel(); // Info widget #4
+var widget5 = new QLabel(); // Info widget #5
+var infoWidgetProxy; // Info widget proxy layer
+var helperWidgetProxy; // Helper widget proxy layer
+var block_size = 0; // Letter box initial size
+var block_left = new QGraphicsPolygonItem(); // Left letter box
+var block_right = new QGraphicsPolygonItem(); // Right letter box
+var mouselook = false; // Mouse look default boolean value
+var arrow3D; // 3D arrow entity
+var arrow3DTransform; // Variable for transform function of 3D Arrow's placeable component
+var DEFAULT_A3D_POS = new float3(0,-0.9,-3); // Initial value of 3D Arrow's position
+var DEFAULT_A3D_ROT = new float3(0,-90,0); // Initial value of 3D Arrow's rotation
+var DEFAULT_A3D_SA = new float3(0.1,0.01,0.1); // Initial value of 3D Arrow's scale
+var radians; // Variable for trigonometric calculations
 
+//del after tests
+var FPSlabel = new QLabel();
+var FPSWidgetProxy;
+ 
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+}
 
-// Globals
-var _p = null;
-var masterclient;
-var mastercamera;
-var fov = 38.5; // Field of vision (45 = default, 38.5 is good in one particular setup)
-var sector = 0;
-var voidentity = scene.GetEntityByName("Void");
-var compass = new QPixmap();
-var needle = new QPixmap();
-var pixmap_arrow = new QPixmap();
-var arrow = new QPixmap();
-var angle = 0;
-var panning = 0;
-var compass_angle = 0;
-var distance_to_north = 10000;
-var proxy = new UiProxyWidget();
-var proxy2 = new UiProxyWidget();
-var mainWidget = new QWidget();
-var widget1 = new QLabel();
-var widget2 = new QLabel();
-var widget3 = new QLabel();
-var widget4 = new QLabel();
-var widget5 = new QLabel();
-var block_size = 0;
-var block_a = new QGraphicsPolygonItem();
-var block_b = new QGraphicsPolygonItem();
-var arrow2 = new QGraphicsPolygonItem();
-var mouselook = false;
-
-var arrow3;
-var x0, x1, z0, z1;
-var north_x = 0;
-var north_z = -1000;
-var bearing = 0.0;
-var deltaInDegrees = 0.0;
-var angleInDegrees = 0.0;
-var previous_angleInDegrees = 0.0;
-var bearingangle = 0.0;
-var angle2 = 0.0;
-var prev_angle = 0;
-var direction = 0;
-var altitude = 0;
-
-
-var _g =
+/**
+ * Movement modifier.
+ * @class MovementModifier
+ * @static
+ */
+//var _g =
+var MovementModifier =
 {
-	connected : false,
 	rotate :
 	{
+		/**
+		 * Set rotating sensitivity.
+		 * @property MovementModifier.rotate.sensitivity
+		 * @type Number
+		 */	
 		sensitivity : 0.3
-		//sensitivity : 1.0
 	},
+	
 	move :
 	{
+		/**
+		 * Set moving sensitivity.
+		 * @property MovementModifier.moving.sensitivity
+		 * @type Number
+		 */	
 		sensitivity : 10.0,
-		//sensitivity : 20.0,
+		
+		/**
+		 * Set moving amount vector.
+		 * @property MovementModifier.moving.amount
+		 * @type Number
+		 */	 
 		amount : new float3(0,0,0)
 	},
+	
+	/**
+	 * Set motion vector.
+	 * @property MovementModifier.motion
+	 * @type Number
+	 */	
 	motion : new float3(0,0,0),
 };
 
-
-var MasterClient = Class.extend
+/**
+The MasterClass class.
+@class MasterClass
+@extension LoaderClass
+@constructor
+*/
+var MasterClass = Class.extend
 ({
+	/**
+	 * Master class initialisation.
+	 * @method init
+	 * @static 
+	 */
+	 
 	init: function()
 	{
 
-		// Connect frame updates and enabled inputmapper
-		frame.Updated.connect(this, this.Update);
-		
+		/**
+		 * Connect frame updates.
+		 * @event frame.Updated.connect
+		 * @param Update {Object} Function to invoke
+		 */		 
+		frame.Updated.connect(this.Update);
+	
 		Log("**** Creating master client objects");
 
 		this.clearScene();
 		this.setInfoWidgetLayout();
+		//this.FPS();
 		this.removeFreeLookCamera();
 		this.createMasterClient();
-		this.createArrow();
+		this.create3DArrow();
 		this.setMasterCamera();
 		this.setSpawnPoint();
 		this.createInputHandler();
 		this.drawCompass();
 		this.showInfoWidgetDefaultValues();
-		//this.helpWidget();
+		this.helpWidget();
 		
-		// Signals
-		voidentity.Action("ChangeForwardDirectionMsg").Triggered.connect(this, this.ChangeForwardDirection);
-		voidentity.Action("MoveCamerasMsg").Triggered.connect(this, this.MoveCameras);
-		voidentity.Action("ResetCamerasMsg").Triggered.connect(this, this.ResetCameras);
-		voidentity.Action("LetterBoxMsg").Triggered.connect(this, this.LetterBox);
-		voidentity.Action("_MSG_MOVING_MODE").Triggered.connect(this, this.LetterBox);
-		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
-        masterclient.placeable.AttributeChanged.connect(this, this.ParentEntityRefChanged);	
+		/**
+		 * Connect camera movement handler.
+		 * @event entity.Action("MSG_MOVE_CAM").Triggered.connect
+		 * @param MoveCameras {Object} Function to invoke
+		 */
+		voidEntity.Action("MSG_MOVE_CAM").Triggered.connect(this.MoveCameras);
+
+		/**
+		 * Connect screen letterbox size handler.
+		 * @event entity.Action("MSG_LETTER_BOX").Triggered.connect
+		 * @param LetterBox {Object} Function to invoke
+		 */
+		voidEntity.Action("MSG_LETTER_BOX").Triggered.connect(this.LetterBox);
+
+		/**
+		 * Connect status message handler.
+		 * @event entity.Action("MSG_STATUSMSG").Triggered.connect
+		 * @param UpdateStatus {Object} Function to invoke
+		 */
+		voidEntity.Action("MSG_STATUSMSG").Triggered.connect(this.UpdateStatus); // 
+		voidEntity.Action("MSG_STATUSMSG2").Triggered.connect(this.UpdateStatus2); // 
+		
+		/**
+		 * Connect window resize listener.
+		 * @event ui.GraphicsScene().sceneRectChanged.connect
+		 * @param windowResized {Object} Function to invoke
+		 */		
+		ui.GraphicsScene().sceneRectChanged.connect(this.windowResized);
+		
+		/**
+		 * Connect attribute change listener.
+		 * @event  entity.placeable.AttributeChanged.connect
+		 * @param ParentEntityRefChanged {Object} Function to invoke
+		 */		
+        masterClient.placeable.AttributeChanged.connect(this.ParentEntityRefChanged);	// If user changes parent entity reference this function is called
 	},
 	
+	/**
+	 * Clears duplicates from scene if Script is reloaded
+	 * @method clearScene
+	 */
 	clearScene: function()
 	{
-		var ui_item = ui.GraphicsScene().items();
-		for (var i=0; i < ui_item.length; i++)
-		//	ui.GraphicsScene().removeItem(ui_item[i]);
+		/**
+		 * Get array of scene items.
+		 * @method ui.GraphicsScene().items
+		 * @return {Array} ui_items.
+		 */
+		 
+		var ui_items = ui.GraphicsScene().items();
+		for (var i=0; i < ui_items.length; i++)
 		{
-			if (ui_item[i].type() == 7)
+			if (ui_items[i].type() == 5 || ui_items[i].type() == 7) // 5=letter box, 7=compass
 			{
-				ui.GraphicsScene().removeItem(ui_item[i]);
-				Log("**** Removed: " +ui_item[i]);
+				/**
+				 * Remove item.
+				 * @method ui.GraphicsScene().removeItem
+				 * @param param {Object} Item to remove
+				 */			
+				ui.GraphicsScene().removeItem(ui_items[i]);
+				
+				Log("**** Removed: " +ui_items[i]);
 			}
-		} 
-		var oldarrow = scene.GetEntityByName("Arrow");
-		if (oldarrow)
+		}
+		
+		/**
+		 * Get entity by name.
+		 * @method scene.GetEntityByName
+		 * @param name {String} Entity name to get
+		 * @return {Object} Arrow.
+		 */	
+		
+		var oldArrow = scene.GetEntityByName("Arrow");
+		if (oldArrow)
 		{
-			scene.RemoveEntity(oldarrow.id,'');
+			/**
+			 * Remove (old) Arrow entity if found
+			 * @method scene.RemoveEntity
+			 * @param oldArrow.Id {Number} Arrow's id number
+			 * @param AttributeChange=Default {Enum} Enumeration of attribute/component change types for replication. (2=LocalOnly, 3=Replicate)
+			 * @return {Boolean} Return true if entity has been found and removed.
+			*/		
+			scene.RemoveEntity(oldArrow.Id(),'');
+			
 			Log("**** Old Arrow entity removed");
 		}		
 	},
 	
 	
+	/**
+	 * Sets and shows Info widget default values.
+	 * @method showInfoWidgetDefaultValues
+	 */
 	showInfoWidgetDefaultValues: function()
 	{
 		widget1.text = "Client1 (MasterClient)";
-		widget2.text = "Azimuth: " +angle2.toFixed(2);
+		widget2.text = "Azimuth: " +azimuth.toFixed(2);
 		widget3.text = "Direction of travel: " +direction;		
 		widget4.text = "Sector: "+sector;
-		widget5.text = "Altitude: "+voidentity.placeable.transform.pos.y;//.toFixed(2);
-		//widget5.text = "Field of vision: "+fov.toFixed(2);
+		widget5.text = "Altitude: "+voidEntity.placeable.transform.pos.y;//.toFixed(2);
 	},
 	
-	createArrow: function()
+	/**
+	 * Create 3D Arrow entity.
+	 * @method create3DArrow
+	 */
+	create3DArrow: function()
 	{
-		arrow3 = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh", "EC_Name"]);
-		arrow3.SetName("Arrow");
-		arrow3.mesh.meshRef = "assets/Arrow.mesh";
-		var mats = arrow3.mesh.meshMaterial;
+		/**
+		 * Create 3D Arrow local entity with Placeable, Mesh and Name components.
+		 * @method scene.CreateLocalEntity
+		 * @param components {Array} Creates entity with listed components
+		 */
+		arrow3D = scene.CreateLocalEntity(["EC_Placeable", "EC_Mesh", "EC_Name"]);
+
+		/**
+		 * Set entity's name.
+		 * @method entity.SetName
+		 * @param param {String}
+		 */		
+		arrow3D.SetName("Arrow");
+		
+		/**
+		 * Set mesh reference of entity.
+		 * @method entity.mesh.meshRef
+		 * @param param {String} Mesh file name and path
+		 */			
+		arrow3D.mesh.meshRef = "assets/Arrow.mesh";
+
+		/**
+		 * Set mesh material of entity.
+		 * @method entity.mesh.meshMaterial
+		 * @param param {String} Mesh material file name and path
+		 */			
+		var mats = arrow3D.mesh.meshMaterial;
 		mats[0] = "assets/Metal.material";
-		arrow3.mesh.meshMaterial = mats; 
-		arrow3.placeable.SetParent(voidentity, preserveWorldTransform=false);
-		arrow3.placeable.SetPosition(0,-0.9,-3);
-		var trans = arrow3.placeable.transform;
-		trans.rot.y = -90;
-		trans.scale.x = 0.1;
-		trans.scale.z = 0.1;
-		trans.scale.y = 0.01;
-		arrow3.placeable.transform = trans;
+		arrow3D.mesh.meshMaterial = mats;
+
+		/**
+		 * Parents this entity to another entity.
+		 * @method entity.placeable.SetParent
+		 * @param entity {Object} Parenting refers to this entity (Void-entity)
+		 * @param preserveWorldTransform=false {Boolean} When false, the transform attribute of this placeable is treated as the new local
+		 */			
+		arrow3D.placeable.SetParent(voidEntity, preserveWorldTransform=false);
+		
+		/**
+		 * Set transformation of entity.
+		 * @method entity.placeable.transform
+		 */			
+		arrow3DTransform = arrow3D.placeable.transform;
+		arrow3DTransform.pos = DEFAULT_A3D_POS;
+		arrow3DTransform.rot = DEFAULT_A3D_ROT;
+		arrow3DTransform.scale = DEFAULT_A3D_SA;
+		arrow3D.placeable.transform = arrow3DTransform; // sets transformation
 	},
 	
+	
+	/**
+	 * Send new parent entity reference value to all slave clients if user changes that.
+	 * @method ParentEntityRefChanged
+	 * @param attribute {Object} Attribute of MasterClient-entity's Placeable-component
+	 */
 	ParentEntityRefChanged: function(attribute)
 	{
-		widget4.text = attribute.name;
 		if (attribute.name === "Parent entity ref")
 		{
-			voidentity.Exec(4, "ChangeParentEntityRefMsg", attribute.value);
-			widget2.text = "Parent entity reference: " + (scene.GetEntityRaw(attribute.value)).name;
+			/**
+			 * Represents an executable command on the Void-entity.
+			 * @method voidEntity.Exec
+			 * @param ExecType {Enum} Execution type of the action, i.e. where the actions are executed. 1=local, 2=server. 4=peers, 5=local+peers...
+			 * @param p1 {Signal} 1st parameter for the action, if applicable. Emitted when the action is triggered
+			 * @param p2 {Signal} 2nd parameter for the action, if applicable. Emitted when the action is triggered
+			 * @param p3 {Signal} 3rd parameter for the action, if applicable. Emitted when the action is triggered
+			 * @param rest {Array} 	Rest of the parameters, if applicable
+			 */
+			voidEntity.Exec(4, "MSG_PARENT_ENTITY_REF_CHG", attribute.value);
+			voidEntity.Exec(5, "MSG_STATUSMSG", "Parent entity reference: " + (scene.GetEntityRaw(attribute.value)).name);
 		}
 	},
 	
+	/**
+	 * Create Info widgets and layout for them
+	 * @method setInfoWidgetLayout
+	 */
 	setInfoWidgetLayout: function()
 	{
 		var layout = new QVBoxLayout();
+		
+		/**
+		 * Sets the layout manager for mainWidget.
+		 * @method mainWidget.setLayout
+		 * @param layout (QLayout)
+		 */
 		mainWidget.setLayout(layout);
+		
+		/**
+		 * Sets both the minimum and maximum width of mainWidget.
+		 * @method mainWidget.setFixedWidth
+		 * @param w (Number)
+		 */		
 		mainWidget.setFixedWidth(250);
+		
+		/**
+		 * Adds the given widget to the cell grid at row, column. The top-left position is (0, 0) by default.
+		 * @method layout.addWidget
+		 * @param widget {QWidget}
+		 * @param row {Number}
+		 * @param column {Number}
+		 */
 		layout.addWidget(widget1, 0, 1);
 		layout.addWidget(widget2, 0, 1);
 		layout.addWidget(widget3, 0, 1);
 		layout.addWidget(widget4, 0, 1);
 		layout.addWidget(widget5, 0, 1);
+		
+		/**
+		 * Sets the left, top, right, and bottom margins to use around the layout.
+		 * @method layout.setContentsMargins
+		 * @param left {Number}
+		 * @param top {Number}
+		 * @param right {Number}
+		 * @param bottom {Number}
+		 */
 		layout.setContentsMargins(10,0,10,5);
+		
+		/**
+		 * Sets spacing between widgets inside the layout.
+		 * @method layout.setSpacing
+		 * @param [i] {Number}
+		 */
 		layout.setSpacing(2);
-		proxy = ui.AddWidgetToScene(mainWidget);
-		//mainWidget.setStyleSheet("QLabel {background-color: transparent; color: black; font-size: 16px; opacity: 0,2;}");
-		mainWidget.setStyleSheet("QLabel {color: black; font-size: 14px;}");
-		widget1.setStyleSheet("QLabel {color: blue; font-size: 18px; font-weight: bold;}");
+		
+		/**
+		 * This property holds the scene rectangle; the bounding rectangle of the scene.
+		 * @method ui.GraphicsScene().sceneRect
+		 * @return {QRectF} Rectangle in the plane using floating point precision
+		 */
 		rect = ui.GraphicsScene().sceneRect;
-		proxy.windowFlags = 0;
-		proxy.visible = true;
-		proxy.y = 10;
-		proxy.x = rect.width()-mainWidget.width-10;
+		
+		/**
+		 * Creates a proxy widget for the widget and adds it to the main graphics scene.
+		 * @method ui.AddWidgetToScene
+		 * @param widget {QWidget}
+		 * @return {QGraphicsProxyWidget} Proxy widget
+		 */
+		infoWidgetProxy = ui.AddWidgetToScene(mainWidget);
+		
+		/**
+		 * @attribute infoWidgetProxy.windowFlags
+		 * @type Enum 0=Widget, 1=Window, 2=Dialog, 8=Popup, 0xA=Tool, 0xC=ToolTip, 0xE=SplashScreen...
+		 * @default 0
+		 */
+		infoWidgetProxy.windowFlags = 0;
+		
+		/**
+		 * @attribute infoWidgetProxy.visible
+		 * @type Boolean
+		 */		
+		infoWidgetProxy.visible = true;
+
+		/**
+		 * @attribute infoWidgetProxy.y
+		 * @type Number
+		 */			
+		infoWidgetProxy.y = 10;
+
+		/**
+		 * @attribute infoWidgetProxy.x
+		 * @type Number
+		 */			
+		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
+		
+		/**
+		 * Customize the look of widget.
+		 * @method mainWidget.setStyleSheet
+		 * @param widget&styleSheet {Mixed} setStyleSheet(widget {styleSheet})
+		 */
+		mainWidget.setStyleSheet("QLabel {color: black; font-size: 14px;}");
+
+		/**
+		 * Sets the level of opacity for the window (widget). Default 1.0
+		 * @method mainWidget.setWindowOpacity
+		 * @param level {qreal}
+		 */			
 		mainWidget.setWindowOpacity(0.3);
+		
+		widget1.setStyleSheet("QLabel {color: blue; font-size: 18px; font-weight: bold;}");
+		
 	},
 	
+	FPS: function()
+	{
+		FPSlabel.setFixedWidth(1000);
+		FPSlabel.setFixedHeight(400);		
+		FPSlabel.setStyleSheet("QLabel {background-color: rgba(0,0,0,0%); color: red; font-size: 180px;}");
+		FPSWidgetProxy = new UiProxyWidget(FPSlabel);
+		FPSWidgetProxy.y = 300;
+		FPSWidgetProxy.x = (rect.width())/2-(FPSlabel.width)/2;
+		FPSWidgetProxy.windowFlags = 0;
+		ui.AddProxyWidgetToScene(FPSWidgetProxy);
+		FPSWidgetProxy.visible = true;
+	},
+	
+	/**
+	 * Create Helper widget
+	 * @method helpWidget
+	 */
 	helpWidget: function()
 	{
 		var helpLabel = new QLabel();
+		
+		/**
+		 * Set the label's text.
+		 * @attribute QLabel.text
+		 * @type String
+		 */
 		helpLabel.text = 
 			"KEYBOARD COMMANDS\n\
 			\nW/S/A/D		Move forward/backward/left/right\
 			\nSPACE/C	Move up/down\
+			\nL/K		Increase/reset black box size\
 			\nNumpad +	Change direction of travel to the next sector\
 			\nNumpad -	Change direction of travel to the previous sector\
 			\nNumpad 8/9	Minor/Major increase vertical FOV\
@@ -198,423 +468,600 @@ var MasterClient = Class.extend
 			\nH		Show/hide this help\
 			\nQ		Show/hide all widgets\
 			";
-		proxy2 = new UiProxyWidget(helpLabel);
+		helperWidgetProxy = new UiProxyWidget(helpLabel);
 		helpLabel.setStyleSheet("QLabel {background-color: white; color: black; font-size: 16px; margin: 10px;}");
 		helpLabel.setFixedWidth(500);
-		helpLabel.setFixedHeight(260);
-		proxy2.windowFlags = 0;
-		proxy2.y = 50;
-		proxy2.x = 300;		
-		ui.AddProxyWidgetToScene(proxy2);
-		proxy2.visible = true;
+		helpLabel.setFixedHeight(270);
+		helperWidgetProxy.windowFlags = 0;
+		helperWidgetProxy.y = 50;
+		helperWidgetProxy.x = 310;
+
+		/**
+		 * Adds proxy widget to the scene
+		 * @method ui.AddProxyWidgetToScene
+		 * @param ProxyWidget {QGraphicsProxyWidget}
+		 */
+		ui.AddProxyWidgetToScene(helperWidgetProxy);
+		
+		helperWidgetProxy.visible = true;
 	},
 	
+	/**
+	 * Resize black block sizes on screen edges
+	 * @method LetterBox
+	 * @param size {Number} 
+	 */
 	LetterBox: function(size) 
 	{
-		ui.GraphicsScene().removeItem(block_a);
-		ui.GraphicsScene().removeItem(block_b);
+		ui.GraphicsScene().removeItem(block_left);
+		ui.GraphicsScene().removeItem(block_right);
 		if (size!=0)
 		{
 			var color = new QColor("black");
+			
+			/**
+			 * Gets main application window
+			 * @method ui.MainWindow
+			 * @return {Object} Main window
+			 */
 			var mainwin = ui.MainWindow();
+			
+			/**
+			 * Get main window height
+			 * @method mainwin.size.height
+			 * @return {Number} height
+			 */
 			var height = mainwin.size.height();
+			
+			/**
+			 * Get main window width
+			 * @method mainwin.size.width
+			 * @return {Number} width
+			 */			
 			var width = mainwin.size.width();
 			
-			var point_a1 = new QPointF(0,0);
-			var point_a2 = new QPointF(size,0);
-			var point_a3 = new QPointF(size,height);
-			var point_a4 = new QPointF(0,height);
-			var points_a = new Array(point_a1, point_a2, point_a3, point_a4);
-			var qpoly_a = new QPolygon(points_a);
-			var poly_a = new QPolygonF(qpoly_a);
+			/* Creates coordinate points and polygons created from them */
+			var point_left1 = new QPointF(0,0);
+			var point_left2 = new QPointF(size,0);
+			var point_left3 = new QPointF(size,height);
+			var point_left4 = new QPointF(0,height);
+			var points_left = new Array(point_left1, point_left2, point_left3, point_left4);
+			var qpoly_left = new QPolygon(points_left);
+			var poly_left = new QPolygonF(qpoly_left);
 			
-			var point_b1 = new QPointF(width,0);
-			var point_b2 = new QPointF(width-size,0);
-			var point_b3 = new QPointF(width-size,height);
-			var point_b4 = new QPointF(width,height);
-			var points_b = new Array(point_b1, point_b2, point_b3, point_b4);
-			var qpoly_b = new QPolygon(points_b);
-			var poly_b = new QPolygonF(qpoly_b);
+			var point_right1 = new QPointF(width,0);
+			var point_right2 = new QPointF(width-size,0);
+			var point_right3 = new QPointF(width-size,height);
+			var point_right4 = new QPointF(width,height);
+			var points_right = new Array(point_right1, point_right2, point_right3, point_right4);
+			var qpoly_right = new QPolygon(points_right);
+			var poly_right = new QPolygonF(qpoly_right);
 			
-			block_a = new QGraphicsPolygonItem(poly_a, 0, scene);	
-			block_b = new QGraphicsPolygonItem(poly_b, 0, scene);	
-			block_a.setBrush(color);
-			block_b.setBrush(color);
-			block_a.setOpacity(1.0);
-			block_b.setOpacity(1.0);
-			ui.GraphicsScene().addItem(block_a);
-			ui.GraphicsScene().addItem(block_b);
+			block_left = new QGraphicsPolygonItem(poly_left, 0, scene);	
+			block_right = new QGraphicsPolygonItem(poly_right, 0, scene);
+
+			/**
+			 * Used here to set the item's color.
+			 * @method QGraphicsPolygonItem.setBrush
+			 * @param color {QColor} Brush color
+			 */
+			block_left.setBrush(color);
+			block_right.setBrush(color);
+			
+			/**
+			 * Set item's opacity.
+			 * @method QGraphicsPolygonItem.setOpacity
+			 * @param level {qreal}
+			 */			
+			block_left.setOpacity(1.0);
+			block_right.setOpacity(1.0);
+			
+			/**
+			 * Add item.
+			 * @method ui.GraphicsScene().addItem
+			 * @param param {Object} Item to add
+			 */
+			ui.GraphicsScene().addItem(block_left);
+			ui.GraphicsScene().addItem(block_right);
 		}
 	},
 	
+	/**
+	 * Move master camera forward or backward
+	 * @method MoveCameras
+	 * @param param {String} forward|backward
+	 */
 	MoveCameras: function(param)
 	{
-		trans = masterclient.placeable.transform;
-		var radians = sector*60*Math.PI/180;
+		masterTransform = masterClient.placeable.transform;
+		radians = (sector-1)*60*Math.PI/180;
 
 		if (param == "forward") 
 		{
-			trans.pos.z -= Math.cos(radians);    
-			trans.pos.x += Math.sin(radians);    
-			masterclient.placeable.transform = trans;
+			masterTransform.pos.z -= Math.cos(radians);    
+			masterTransform.pos.x += Math.sin(radians);    
+			masterClient.placeable.transform = masterTransform;
 		}
 		else if (param == "backward") 
 		{
-			trans.pos.z += Math.cos(radians);    
-			trans.pos.x -= Math.sin(radians);    
-			masterclient.placeable.transform = trans; 
+			masterTransform.pos.z += Math.cos(radians);    
+			masterTransform.pos.x -= Math.sin(radians);    
+			masterClient.placeable.transform = masterTransform; 
 		}
-		widget2.text = "Camera new z position: "+(-trans.pos.z);
-		mastercamera.SetActive();
+		voidEntity.Exec(5, "MSG_STATUSMSG", "Camera new z position: "+(-masterTransform.pos.z));
+		//masterCamera.SetActive(); //13.5
 	},
 	
-	ResetCameras: function()
-	{
-		//var camera = scene.GetEntityByName("ClientCamera");
-		//trans = camera.placeable.transform;
-		trans = masterclient.placeable.transform;
-		trans.pos.z = 0;
-		trans.pos.x = 0;
-		masterclient.placeable.transform = trans; 
-		mastercamera.SetActive();
-		//debug("Z: "+(-trans.pos.z));
-		widget2.text = "Cameras' positions reseted";
-	},
 	
-	ChangeForwardDirection: function(sector)
-	{
-		ui.GraphicsScene().removeItem(arrow);
-		var ID = parseInt(sector)+1;
-		if (ID == 1) // if MasterClient
-		{
-			this.drawForwardIndicator();
-			widget2.text = "Direction of travel";
-		}
-		else
-			widget2.text = "Direction of travel: client"+ID;
-	},
-	
+	/**
+	 * Set new x coordinate point of InfoWidget if window size resized.
+	 * @method windowResized
+	 * @param rect {QRectF}
+	 */
 	windowResized: function(rect)
 	{
-		if (!arrow.isNull)
-			arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
-		proxy.x = rect.width()-mainWidget.width-10;
+		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
 	},
+
 	
-	WindowResizeListener: function(widg, callbackFunction)
-	{
-		widg.WindowResized = callbackFunction;
-		var gscene = ui.GraphicsScene().scene();
-		gscene.sceneRectChanged.connect(widg, widg.WindowResized);		
-	},
-	
+	/**
+	 * Emitted when it is time for client code to update their applications.
+	 * @method Update
+	 * @param frametime {float} Elapsed time in seconds since the last frame
+	 */
 	Update: function(frametime)
 	{
-		profiler.BeginBlock("FreeLookCamera_Update");
+		//FPSlabel.text = frame.WallClockTime();
+		//voidEntity.Exec(5, "MSG_STATUSMSG", frame.WallClockTime());
+		voidEntity.Exec(5, "MSG_STATUSMSG2", frame.WallClockTime());
+		/**
+		 * Begin profiling a piece of code.
+		 * @method profiler.BeginBlock
+		 * @param Label {String} Profiling label
+		 */
+		profiler.BeginBlock("VoidEntity_Update");
 
-		if (_g.move.amount.x == 0 && _g.move.amount.y == 0 && _g.move.amount.z == 0)
+		if (MovementModifier.move.amount.x == 0 && MovementModifier.move.amount.y == 0 && MovementModifier.move.amount.z == 0)
 		{
 			profiler.EndBlock();
 			return;
 		}
 
-		_g.motion.x = _g.move.amount.x * _g.move.sensitivity * frametime;
-		_g.motion.y = _g.move.amount.y * _g.move.sensitivity * frametime;
-		_g.motion.z = _g.move.amount.z * _g.move.sensitivity * frametime;
+		MovementModifier.motion.x = MovementModifier.move.amount.x * MovementModifier.move.sensitivity * frametime;
+		MovementModifier.motion.y = MovementModifier.move.amount.y * MovementModifier.move.sensitivity * frametime;
+		MovementModifier.motion.z = MovementModifier.move.amount.z * MovementModifier.move.sensitivity * frametime;
 		
-		_g.motion = voidentity.placeable.Orientation().Mul(_g.motion);
-		voidentity.placeable.SetPosition(voidentity.placeable.Position().Add(_g.motion));
+		/**
+		 * Returns the orientation of entity's transform.
+		 * @method entity.placeable.Orientation
+		 * @param MovementModifier.motion {Array} MovementModifier.motion vector multiplied by quaternion of itself
+		 */		
+		MovementModifier.motion = voidEntity.placeable.Orientation().Mul(MovementModifier.motion);
+		
+		/**
+		 * Sets the position of entity's transform.
+		 * @method entity.placeable.SetPosition
+		 * @param MovementModifier.motion {Array} Current position added by g_motion
+		 */		 
+		voidEntity.placeable.SetPosition(voidEntity.placeable.Position().Add(MovementModifier.motion));
 
 		profiler.EndBlock();
 	},
 
-	// Create MasterClient-entity which gives placeable data for the clients
+	/**
+	 * Create MasterClient-entity which handles MasterClient components
+	 * @method createMasterClient
+	 */
 	createMasterClient: function()
 	{
-		masterclient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
-		masterclient.SetName("MasterCamera");
-		masterclient.SetTemporary(true);
-		var placeable = masterclient.placeable;
+		masterClient = scene.CreateLocalEntity(["EC_Placeable", "EC_Camera", "EC_Name"]);
+		masterClient.SetName("MasterCamera");
 		
-		// set parenting reference to the Server's Void-entity
-		placeable.SetParent(voidentity, preserveWorldTransform=false);
+		/**
+		 * Sets entity's temporary value to true
+		 * @method entity.SetTemporary
+		 * @param param {Boolean}
+		 */
+		masterClient.SetTemporary(true);
+		
+		masterClient.placeable.SetParent(voidEntity, preserveWorldTransform=false);
 		
 		Log("**** MasterClient entity has been created with placeable, camera and name components");
 	},
 
-	// Set MasterCamera parameters
+	/**
+	 * Set MasterCamera parameters. MasterCamera is responsible for showing proper viewport of MasterClient.
+	 * @method setMasterCamera
+	 */
 	setMasterCamera: function()
 	{
-		mastercamera = masterclient.camera;
-		mastercamera.verticalFov = fov;
-		mastercamera.SetActive();
+		/**
+		 * Gets camera component of entity.
+		 * @method entity.camera
+		 * @return {Object} Camera object
+		 */
+		masterCamera = masterClient.camera;
+		
+		/**
+		 * @attribute camera.verticalFov
+		 * @type Number
+		 */
+		masterCamera.verticalFov = DEFAULT_FOV;
+		
+		/**
+		 * Activates camera component.
+		 * @method camera.SetActive
+		 */
+		masterCamera.SetActive();
 	},
 	
-	// Set initial spawn point
+	/**
+	 * Set initial spawn point
+	 * @method setSpawnPoint
+	 */
 	setSpawnPoint: function()
 	{
-		var void_placeable = voidentity.placeable;
-		var void_transform = void_placeable.transform;
-		void_transform.pos = new float3(0, 20, 0);
-		voidentity.placeable.transform = void_transform;
+		voidEntity.placeable.SetPosition(DEFAULT_POS);
+		voidTransform = voidEntity.placeable.transform;
+		voidTransform.rot = DEFAULT_ROT;
+		voidEntity.placeable.transform = voidTransform;
 	},
 	
-	// Create handler for keyboard and mouse events
+	/**
+	 * Create handler for keyboard and mouse events
+	 * @method createInputHandler
+	 */
 	createInputHandler: function()
 	{
-		var inputContext = input.RegisterInputContextRaw("FreeLookCamera", 101);
+		/**
+		 * Creates a new input context.
+		 * @method input.RegisterInputContextRaw
+		 * @param name {String} Sets the name of this InputContext
+		 * @param priority {Number} InputContext priority
+		 */
+		var inputContext = input.RegisterInputContextRaw("MasterCamera", 101);
+		
+		/**
+		 * Set to true to receive mouse input events even when the mouse cursor is over a Qt widget.
+		 * @attribute inputContext.takeMouseEventsOverQt
+		 * @type Boolean
+		 */
 		inputContext.takeMouseEventsOverQt = true;
+		
+		/**
+		 * Connect key press handler.
+		 * @event inputContext.KeyPressed.connect
+		 * @param HandleKeyPress {Object} Function to invoke
+		 */
 		inputContext.KeyPressed.connect(this, this.HandleKeyPress);
+		
+		/**
+		 * Connect key release handler.
+		 * @event inputContext.KeyReleased.connect
+		 * @param HandleKeyRelease {Object} Function to invoke
+		 */	
 		inputContext.KeyReleased.connect(this, this.HandleKeyRelease);
+		
+		/**
+		 * Connect mouse event handler.
+		 * @event inputContext.MouseEventReceived.connect
+		 * @param HandleMouse {Object} Function to invoke
+		 */			
 		inputContext.MouseEventReceived.connect(this, this.HandleMouse);
 		Log("**** InputHandler initialized...");
 	},
 	
-	// Handler for key press commands 
+	/**
+	 * Handler for key press commands 
+	 * @method HandleKeyPress
+	 * @param e {KeyEvent} 
+	 */
 	HandleKeyPress: function(e)
 	{
-	
-		var pos1 = voidentity.placeable.WorldPosition();
-		//var radians = (sector)*60*Math.PI/180;
-		//var radians2 = (Math.abs(panning)/(rect.width()/2))*60*Math.PI/180;
-		var radians2 = (direction)*Math.PI/180;
-		previous_angleInDegrees = angle2;
+		// convert angle of direction to radians
+		radians = (direction)*Math.PI/180;
 		
-		widget5.text = "ZX-coordinates: "+voidentity.placeable.WorldPosition().z.toFixed(2) + ", " +voidentity.placeable.WorldPosition().x.toFixed(2);
+		voidEntity.Exec(5, "MSG_STATUSMSG", "ZX-coordinates: "
+			+ voidEntity.placeable.WorldPosition().z.toFixed(2)
+			+ ", " +voidEntity.placeable.WorldPosition().x.toFixed(2));
 
-		// forward
+		// move forward
 		if (e.keyCode == Qt.Key_W)
 		{
-			_g.move.amount.z = -Math.cos(radians2);
-			_g.move.amount.x = Math.sin(radians2);
+			MovementModifier.move.amount.z = -Math.cos(radians);
+			MovementModifier.move.amount.x = Math.sin(radians);
 
 		}
 		
-		// backward
+		// move backward
 		else if (e.keyCode == Qt.Key_S)
 		{
-			_g.move.amount.z = Math.cos(radians2);
-			_g.move.amount.x = -Math.sin(radians2);
+			MovementModifier.move.amount.z = Math.cos(radians);
+			MovementModifier.move.amount.x = -Math.sin(radians);
 		}
 		
-		// right
+		// move right
 		else if (e.keyCode == Qt.Key_D)
 		{
-			_g.move.amount.z = Math.sin(radians2);
-			_g.move.amount.x = Math.cos(radians2);
+			MovementModifier.move.amount.z = Math.sin(radians);
+			MovementModifier.move.amount.x = Math.cos(radians);
 		}
 		
-		// left
+		// move left
 		else if (e.keyCode == Qt.Key_A)
 		{
-			_g.move.amount.z = -Math.sin(radians2);
-			_g.move.amount.x = -Math.cos(radians2);
+			MovementModifier.move.amount.z = -Math.sin(radians);
+			MovementModifier.move.amount.x = -Math.cos(radians);
 		}
 		
-		// up
+		// move up
 		else if (e.keyCode == Qt.Key_Space)
 		{
-			_g.move.amount.y = 1;
-			widget5.text = "Altitude: "+voidentity.placeable.transform.pos.y.toFixed(2);
+			MovementModifier.move.amount.y = 1;
+			voidEntity.Exec(5, "MSG_STATUSMSG", "Altitude: "+voidEntity.placeable.transform.pos.y.toFixed(2));
 		}
 		
-		// down
+		// move down
 		else if (e.keyCode == Qt.Key_C)
 		{
-			_g.move.amount.y = -1;
-			widget5.text = "Altitude: "+voidentity.placeable.transform.pos.y.toFixed(2);
+			MovementModifier.move.amount.y = -1;
+			voidEntity.Exec(5, "MSG_STATUSMSG", "Altitude: "+voidEntity.placeable.transform.pos.y.toFixed(2));
 		}
 		
-		// change sector +
+		// change direction of travel to next sector (Numpad Plus)
 		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_Plus)
 		{
+			/**
+			 * Round a number upward to it's nearest integer.
+			 * @method Math.ceil
+			 * @param param {Number}
+			 * @return {Number} Rounded result
+			 */
 			if (direction == Math.ceil(direction/60)*60)
 				direction += 60;
 			else
 				direction = Math.ceil(direction/60)*60;
 			if (direction > 300)
 				direction = 0;
-			var trans = arrow3.placeable.transform;
-			trans.rot.y = -90-direction;
-			arrow3.placeable.transform = trans;
+				
+			arrow3DTransform.rot.y = -90-direction;
+			arrow3D.placeable.transform = arrow3DTransform;
 			sector = direction/60+1;	
-			//voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
-			voidentity.Exec(5, "_MSG_ROTATE_ARROW_", direction);
+			voidEntity.Exec(5, "MSG_ROTATE_ARROW", direction);
 			widget3.text = "Direction of travel: " +direction;		
 			widget4.text = "Sector: "+sector;
 		}
 		
-		// change sector -
+		// change direction of travel to previous sector (Numpad Minus)
 		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_Minus)
 		{
+			/**
+			 * Round a number downward  to it's nearest integer.
+			 * @method Math.floor
+			 * @param param {Number}
+			 * @return {Number} Rounded result
+			 */		
 			if (direction == Math.floor(direction/60)*60)
 				direction -= 60;
 			else
 				direction = Math.floor(direction/60)*60;
 			if (direction < 0)
 				direction = 300;
-			var trans = arrow3.placeable.transform;
-			trans.rot.y = -90-direction;
-			arrow3.placeable.transform = trans;			
-			//voidentity.Exec(5, "ChangeForwardDirectionMsg", sector);
+			
+			arrow3DTransform.rot.y = -90-direction;
+			arrow3D.placeable.transform = arrow3DTransform;
 			sector = direction/60+1;	
-			voidentity.Exec(5, "_MSG_ROTATE_ARROW_", direction);
+			voidEntity.Exec(5, "MSG_ROTATE_ARROW", direction);
 			widget3.text = "Direction of travel: " +direction;		
 			widget4.text = "Sector: "+sector;
 		}
 		
-		// major increase vertical fov
+		// major increase vertical fov (Numpad 9)
 		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_9)
 		{
 			fov += 1.0;
-			mastercamera.verticalFov = fov;
-			widget5.text = "Field of vision: "+fov.toFixed(2);
-			voidentity.Exec(4, "ChangeFovMsg", fov);	// 4=peers
+			masterCamera.verticalFov = fov;
+			voidEntity.Exec(5, "MSG_STATUSMSG", "Field of vision: "+fov.toFixed(2));
+			voidEntity.Exec(4, "MSG_FOV_CHG", fov);	// 4=peers
 		}
 		
-		// minor increase vertical fov
+		// minor increase vertical fov (Numpad 8)
 		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_8)
 		{
 			fov += 0.05;
-			mastercamera.verticalFov = fov;
-			widget5.text = "Field of vision: "+fov.toFixed(2);
-			voidentity.Exec(4, "ChangeFovMsg", fov);
+			masterCamera.verticalFov = fov;
+			voidEntity.Exec(5, "MSG_STATUSMSG", "Field of vision: "+fov.toFixed(2));
+			voidEntity.Exec(4, "MSG_FOV_CHG", fov);
 		}		
 		
-		// major decrease vertical fov
+		// major decrease vertical fov (Numpad 6)
 		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_6)
 		{
 			fov -= 1.0;
-			mastercamera.verticalFov = fov;
-			widget5.text = "Field of vision: "+fov.toFixed(2);
-			voidentity.Exec(4, "ChangeFovMsg", fov);
+			masterCamera.verticalFov = fov;
+			voidEntity.Exec(5, "MSG_STATUSMSG", "Field of vision: "+fov.toFixed(2));
+			voidEntity.Exec(4, "MSG_FOV_CHG", fov);
 		}
 		
-		// minor decrease vertical fov
+		// minor decrease vertical fov (Numpad 5)
 		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_5)
 		{
 			fov -= 0.05;
-			mastercamera.verticalFov = fov;
-			widget5.text = "Field of vision: "+fov.toFixed(2);
-			voidentity.Exec(5, "ChangeFovMsg", fov);
+			masterCamera.verticalFov = fov;
+			voidEntity.Exec(5, "MSG_STATUSMSG", "Field of vision: "+fov.toFixed(2));
+			voidEntity.Exec(4, "MSG_FOV_CHG", fov);
 		}			
 
 		// Reset initial state
 		else if (e.keyCode == Qt.Key_R)
 		{
 			this.setSpawnPoint();
-			angle2 = 0;
-			direction = 0;
-			var trans = arrow3.placeable.transform;
-			trans.rot.y = -90;
-			arrow3.placeable.transform = trans;
+			fov = DEFAULT_FOV;
+			direction = DEFAULT_DIR;
+			azimuth = DEFAULT_AZM;
+			sector = DEFAULT_SECT;
+			masterCamera.verticalFov = DEFAULT_FOV;
+			
+			/**
+			 * Rotates QPixmap object around its center.
+			 * @method QPixmap.setRotation
+			 * @param degrees {Number}
+			 */
+			//compass.setRotation((voidTransform.rot.y)%360) //del 14.5
+			compass.setRotation((voidTransform.rot.y))
+			
+			arrow3DTransform = arrow3D.placeable.transform;
+			arrow3DTransform.rot = DEFAULT_A3D_ROT;
+			arrow3DTransform.pos = DEFAULT_A3D_POS;
+			arrow3D.placeable.transform = arrow3DTransform;
+			
+			masterClient.placeable.SetPosition(new float3(0,0,0));
 			this.showInfoWidgetDefaultValues();
+			voidEntity.Exec(5, "MSG_STATUSMSG", "CAMERAS SET TO INITIAL STATE");
+			voidEntity.Exec(4, "MSG_RESET_CAMERAS");
 		}
 		
-		// Move cameras forward
-		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_n)
-			voidentity.Exec(5, "MoveCamerasMsg", "forward");
+		// Move cameras forward (Numpad 7)
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_7)
+			voidEntity.Exec(5, "MSG_MOVE_CAM", "forward");
 		
-		// Move cameras backward
-		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_PageDown)
-			voidentity.Exec(5, "MoveCamerasMsg", "backward");
-		
-		
-		// Reset cameras positions
-		else if (e.keyCode == Qt.Key_N)
-			voidentity.Exec(5, "ResetCamerasMsg");
-		
+		// Move cameras backward (Numpad 4)
+		else if (e.modifiers & Qt.KeypadModifier && e.keyCode == Qt.Key_4)
+			voidEntity.Exec(5, "MSG_MOVE_CAM", "backward");
 		
 		// Increase black block size
 		else if (e.keyCode == Qt.Key_L)
 		{
 			block_size += 5;
-			voidentity.Exec(5, "LetterBoxMsg", block_size);
+			voidEntity.Exec(5, "MSG_LETTER_BOX", block_size);
 		}
 
 		// Reset black block size
 		else if (e.keyCode == Qt.Key_K)
 		{
 			block_size = 0;
-			voidentity.Exec(5, "LetterBoxMsg", block_size);
+			voidEntity.Exec(5, "MSG_LETTER_BOX", block_size);
 		}
-
-		// Moving mode: mode1
-		else if (e.keyCode == Qt.Key_1)
-			voidentity.Exec(5, "_MSG_MOVING_MODE", "mode1");
-
-		// Moving mode: mode2
-		else if (e.keyCode == Qt.Key_2)
-			voidentity.Exec(5, "_MSG_MOVING_MODE", "mode2");
 		
 		// Show/hide all widgets and extra graphics
 		else if (e.keyCode == Qt.Key_Q)
 		{
-			if (proxy.visible == true)
+			if (infoWidgetProxy.visible == true)
 			{
-				proxy.visible = false;
-				proxy2.visible = false;
+				infoWidgetProxy.visible = false;
+				helperWidgetProxy.visible = false;
+				
+				/**
+				 * Hide QPixmap object.
+				 * @method QPixmap.hide
+				 * @type QPixmap
+				 */
 				compass.hide();
 				needle.hide();
-				arrow3.mesh.RemoveMesh();
-				voidentity.Exec(4, "_MSG_TOGGLE_WIDGETS_", "HIDE");
+				
+				/**
+				 * Removes mesh.
+				 * @method entity.mesh.RemoveMesh
+				 */			
+				arrow3D.mesh.RemoveMesh();
+				voidEntity.Exec(4, "MSG_TOGGLE_WIDGETS", "HIDE");
 			}
 			else
 			{
-				proxy.visible = true;
+				infoWidgetProxy.visible = true;
+				
+				/**
+				 * Show hidden QPixmap object.
+				 * @method QPixmap.show
+				 * @type QPixmap
+				 */				
 				compass.show();
 				needle.show();
-				arrow3.mesh.meshRef = "assets/Arrow.mesh";
-				voidentity.Exec(4, "_MSG_TOGGLE_WIDGETS_", "SHOW");
+				arrow3D.mesh.meshRef = "assets/Arrow.mesh";
+				voidEntity.Exec(4, "MSG_TOGGLE_WIDGETS", "SHOW");
 			}
 		}
+		
+		// ROTATE TEST
+		else if (e.keyCode == Qt.Key_T)
+		{
+			for (var i=0; i<100; i++)
+			//var i=0;
+			//do
+			{
+				//frame.DelayedExecute(10.0).Triggered.connect(this.PerEvent(50));
+				//setTimeout(this.PerEvent(50, 1000));
+				this.PerEvent(50);
+				//widget4.text=ret;
+				sleep(10);
+				//frame.Updated.connect(this.Update);
+			} 
+			//while(i<10);
+			//MovementModifier.move.amount.y = -1;
+			//voidEntity.Exec(5, "MSG_STATUSMSG", "Altitude: "+voidEntity.placeable.transform.pos.y.toFixed(2));
+		}		
 		
 		// Show/hide help widget
 		else if (e.keyCode == Qt.Key_H)
 		{
-			if (proxy2.visible == true)
-				proxy2.visible = false;
+			if (helperWidgetProxy.visible == true)
+				helperWidgetProxy.visible = false;
 			else
-				proxy2.visible = true;
+				helperWidgetProxy.visible = true;
 		}
-		
-		x0 = voidentity.placeable.WorldPosition().x;
-		z0 = voidentity.placeable.WorldPosition().z;
-		var deltaX = north_x - x0;
-		var deltaZ = z0 - north_z; // Z-axis goes down so deltaZ calculation has to be reserved
-		angleInDegrees = -90 + Math.atan2(deltaZ, deltaX) * 180 / Math.PI;
-		deltaInDegrees = angleInDegrees - previous_angleInDegrees;
-		compass.setRotation(-angle2);
-		widget2.text = "Azimuth: " +angle2.toFixed(2);
-		
-		//widget1.text = e.keyCode;
 	},
 	
-	// Handler for key release commands
+	PerEvent: function(param)
+	{
+		voidTransform = voidEntity.placeable.transform;
+		voidTransform.rot.y -= MovementModifier.rotate.sensitivity * parseInt(param);
+		voidEntity.placeable.transform = voidTransform; // sets new rotation
+		azimuth = -(voidTransform.rot.y)%360;
+		if (azimuth < 0)
+			azimuth = 360 + azimuth;
+		compass.setRotation(-azimuth);
+		//compass.setRotation((voidTransform.rot.y)%360);
+		widget2.text = "Azimuth: " + azimuth.toFixed(2);
+		//widget2.text = "Azimuth: " +(-(voidTransform.rot.y)%360).toFixed(2);
+		//frame.DelayedExecute(0.01).Triggered.connect(this.PerEvent(1));
+		//return azimuth;
+	},
+	
+	/**
+	 * Handler for key release commands (stop movement)
+	 * @method HandleKeyRelease
+	 * @param e {KeyEvent} 
+	 * @return 
+	 */
 	HandleKeyRelease: function(e)
 	{
-	if (e.keyCode == Qt.Key_W && _g.move.amount.z != 0 )
-		_g.move.amount = new float3(0,0,0);
+	if (e.keyCode == Qt.Key_W && MovementModifier.move.amount.z != 0 )
+		MovementModifier.move.amount = new float3(0,0,0);
 	
-	else if (e.keyCode == Qt.Key_S && _g.move.amount.z != 0)
-		_g.move.amount = new float3(0,0,0);
+	else if (e.keyCode == Qt.Key_S && MovementModifier.move.amount.z != 0)
+		MovementModifier.move.amount = new float3(0,0,0);
 	
-	else if (e.keyCode == Qt.Key_D && _g.move.amount.x != 0)
-		_g.move.amount = new float3(0,0,0);
+	else if (e.keyCode == Qt.Key_D && MovementModifier.move.amount.x != 0)
+		MovementModifier.move.amount = new float3(0,0,0);
 		
-	else if (e.keyCode == Qt.Key_A && _g.move.amount.x != 0)
-		_g.move.amount = new float3(0,0,0);
+	else if (e.keyCode == Qt.Key_A && MovementModifier.move.amount.x != 0)
+		MovementModifier.move.amount = new float3(0,0,0);
 	
-	else if (e.keyCode == Qt.Key_Space && _g.move.amount.y != 0)
-		_g.move.amount = new float3(0,0,0);
+	else if (e.keyCode == Qt.Key_Space && MovementModifier.move.amount.y != 0)
+		MovementModifier.move.amount = new float3(0,0,0);
 		
-	else if (e.keyCode == Qt.Key_C && _g.move.amount.y != 0)
-		_g.move.amount = new float3(0,0,0);
+	else if (e.keyCode == Qt.Key_C && MovementModifier.move.amount.y != 0)
+		MovementModifier.move.amount = new float3(0,0,0);
 	},
 
-	// Handler for mouse events
+	/**
+	 * Handler for mouse events
+	 * @method HandleMouse
+	 * @param e {MouseEvent}
+ 	 */
 	HandleMouse: function(e)
 	{
+		// RMB handler
 		if (e.IsButtonDown(2) && !input.IsMouseCursorVisible())
 		{
 			mouselook = true;
@@ -623,41 +1070,59 @@ var MasterClient = Class.extend
 			if (e.relativeY != 0)
 				this.HandleMouseLookY(e.relativeY);
 		}
+		// LMB handler
 		else if (e.IsButtonDown(1))
-			this.HandleMousePan(e.relativeX)
+			this.ChangeForwardDirectionByMouse(e.relativeX)
 		
 		else if (e.GetEventType() == 4)
 			mouselook = false;
 	},
 
-	// Handler for mouse x axis relative movement
+	/**
+	 * Handler for mouse x axis relative movement (rotate camera)
+	 * @method HandleMouseLookX
+	 * @param param {Number}
+	 */
 	HandleMouseLookX: function(param)
 	{
-		var transform = voidentity.placeable.transform;
-		transform.rot.y -= _g.rotate.sensitivity * parseInt(param);
-		voidentity.placeable.transform = transform;
-		bearing = (-(transform.rot.y)%360);
-		angle2 = bearing;
-		compass.setRotation(-angle2);
-		widget2.text = "Azimuth: " +angle2.toFixed(2);
+		voidTransform = voidEntity.placeable.transform;
+		voidTransform.rot.y -= MovementModifier.rotate.sensitivity * parseInt(param);
+		voidEntity.placeable.transform = voidTransform; // sets new rotation
+		azimuth = -(voidTransform.rot.y)%360;
+		if (azimuth < 0)
+			azimuth = 360 + azimuth;
+		compass.setRotation(-azimuth);
+		//compass.setRotation((voidTransform.rot.y)%360);
+		widget2.text = "Azimuth: " + azimuth.toFixed(2);
+		//widget2.text = "Azimuth: " +(-(voidTransform.rot.y)%360).toFixed(2);
 	},
 
 	// Handler for mouse y axis relative movement
+	/**
+	 * Description
+	 * @method HandleMouseLookY
+	 * @param param {Number} 
+	 * @return 
+	 */
 	HandleMouseLookY: function(param)
 	{
-		var transform = voidentity.placeable.transform;
-		var radians = (sector-1)*60*Math.PI/180;
-		transform.rot.x -= _g.rotate.sensitivity * parseInt(param);
-		if (transform.rot.x > 90.0)
-			transform.rot.x = 90.0;
-		if (transform.rot.x < -90.0)
-			transform.rot.x = -90.0;
-		voidentity.placeable.transform = transform;
+		voidTransform = voidEntity.placeable.transform;
+		radians = (sector-1)*60*Math.PI/180;
+		voidTransform.rot.x -= MovementModifier.rotate.sensitivity * parseInt(param);
+		if (voidTransform.rot.x > 90.0)
+			voidTransform.rot.x = 90.0;
+		if (voidTransform.rot.x < -90.0)
+			voidTransform.rot.x = -90.0;
+		voidEntity.placeable.transform = voidTransform;	
 	},
 	
-	HandleMousePan: function(param)
+	/**
+	 * Changes forward direction and rotate 3D Arrow by RMB
+	 * @method ChangeForwardDirectionByMouse
+	 * @param param {Number} 
+	 */
+	ChangeForwardDirectionByMouse: function(param)
 	{
-		var increase = param/rect.width()*60;
 		var increase = param/rect.width()*120;
 		if (param < 0 && direction+increase < 10 && direction+increase > 0)	// snap to zero
 			direction = 0;
@@ -670,45 +1135,74 @@ var MasterClient = Class.extend
 		else
 			direction = direction+increase;
 		widget3.text = "Direction of travel: " +direction.toFixed(2);
-		var trans = arrow3.placeable.transform;
-		trans.rot.y = -90-direction;
-		arrow3.placeable.transform = trans;
-		voidentity.Exec(5, "_MSG_ROTATE_ARROW_", direction);
+		widget4.text = "Sector: " + parseInt((direction/60)+1);
+
+		arrow3DTransform = arrow3D.placeable.transform;
+		arrow3DTransform.rot.y = -90-direction;
+		arrow3D.placeable.transform = arrow3DTransform;
+		voidEntity.Exec(5, "MSG_ROTATE_ARROW", direction);
 	},
 	
+	/**
+	 * Displays compass and compass needle on screen
+	 * @method drawCompass
+	 */
 	drawCompass: function()
 	{
-		var pixmap_compass = new QPixmap(asset.GetAsset("compassd.png").DiskSource());
-		var pixmap_needle = new QPixmap(asset.GetAsset("needle.png").DiskSource());
-		compass = ui.GraphicsScene().addPixmap(pixmap_compass);
-		needle = ui.GraphicsScene().addPixmap(pixmap_needle);
-		compass.setTransformOriginPoint(pixmap_compass.width()/2, pixmap_compass.height()/2);
+		/**
+		 * This path specifies a local filename from which this asset can be reloaded if necessary.
+		 * @method asset.GetAsset(path+filename).DiskSource
+		 */
+		var pmCompass = new QPixmap(asset.GetAsset("compass.png").DiskSource());
+		var pmNeedle = new QPixmap(asset.GetAsset("needle.png").DiskSource());
+		
+		/**
+		 * Creates and adds a pixmap item to the scene.
+		 * @method ui.GraphicsScene().addPixmap
+		 * @param pixmap {QPixmap}
+		 */
+		compass = ui.GraphicsScene().addPixmap(pmCompass);
+		needle = ui.GraphicsScene().addPixmap(pmNeedle);
+		
+		/**
+		 * Sets transformation origin point. For example for standard rotation, set x and y values to the center of image. 
+		 * @method QPixmap.setTransformOriginPoint
+		 * @param x {Number}
+		 * @param y {Number}
+		 */
+		compass.setTransformOriginPoint(pmCompass.width()/2, pmCompass.height()/2);
 	},
 	
-	drawForwardIndicator: function(angle)
-	{
-		pixmap_arrow = new QPixmap(asset.GetAsset("arrow3b.png").DiskSource());
-		arrow = ui.GraphicsScene().addPixmap(pixmap_arrow);
-		rect = ui.GraphicsScene().sceneRect;
-		arrow.setPos(rect.width()/2-(135/2),rect.height()-pixmap_arrow.height());
-		///arrow.setTransformOriginPoint(pixmap_arrow.width()/2, pixmap_arrow.height());
-		arrow.setTransformOriginPoint(pixmap_arrow.width()/2, (pixmap_arrow.height())*4);
-	},
-	
-	// Remove FreeLookCamera from the scene
+	/**
+	 * Remove FreeLookCamera from the scene
+	 * @method removeFreeLookCamera
+	 */
 	removeFreeLookCamera: function()
 	{
 		var freelookcamera = scene.GetEntityByName("FreeLookCamera");
-		
 		if (freelookcamera)
 		{
 			scene.RemoveEntity(freelookcamera.id,'');
 			Log("**** FreeLookCamera entity removed");
 		}
+	},
+	
+	/**
+	 * Shows status messages in widget5
+	 * @method UpdateStatus
+	 * @param text {String} 
+	 */
+	UpdateStatus: function(text)
+	{
+		widget5.text = text;
+	},
+	UpdateStatus2: function(text)
+	{
+		FPSlabel.text = Math.round(text*100000)/100000;
 	}
 });
 
 // Startup
-_p = new MasterClient();
+_masterClientInstance = new MasterClass();
 
 // EOF
