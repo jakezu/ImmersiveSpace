@@ -105,7 +105,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "slaveclients.js",
-            "line": 36,
+            "line": 35,
             "description": "The SlaveClass class.",
             "extension": "LoaderClass",
             "is_constructor": 1
@@ -362,7 +362,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 148,
+            "line": 147,
             "description": "Connect window resize listener.",
             "itemtype": "event",
             "name": "ui.GraphicsScene().sceneRectChanged.connect",
@@ -377,7 +377,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 155,
+            "line": 154,
             "description": "Connect attribute change listener.",
             "itemtype": "event",
             "name": "entity.placeable.AttributeChanged.connect",
@@ -392,15 +392,15 @@
         },
         {
             "file": "masterclient.js",
-            "line": 163,
-            "description": "Clears duplicates from scene if Script is reloaded",
+            "line": 162,
+            "description": "Clears duplicates from scene when Script is (re)loaded",
             "itemtype": "method",
             "name": "clearScene",
             "class": "MasterClass"
         },
         {
             "file": "masterclient.js",
-            "line": 169,
+            "line": 168,
             "description": "Get array of scene items.",
             "itemtype": "method",
             "name": "ui.GraphicsScene().items",
@@ -412,7 +412,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 180,
+            "line": 179,
             "description": "Remove item.",
             "itemtype": "method",
             "name": "ui.GraphicsScene().removeItem",
@@ -427,7 +427,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 191,
+            "line": 190,
             "description": "Get entity by name.",
             "itemtype": "method",
             "name": "scene.GetEntityByName",
@@ -446,7 +446,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 201,
+            "line": 200,
             "description": "Remove (old) Arrow entity if found",
             "itemtype": "method",
             "name": "scene.RemoveEntity",
@@ -470,7 +470,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 215,
+            "line": 214,
             "description": "Sets and shows Info widget default values.",
             "itemtype": "method",
             "name": "showInfoWidgetDefaultValues",
@@ -478,7 +478,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 228,
+            "line": 227,
             "description": "Create 3D Arrow entity.",
             "itemtype": "method",
             "name": "create3DArrow",
@@ -486,14 +486,14 @@
         },
         {
             "file": "masterclient.js",
-            "line": 234,
-            "description": "Create local entity with listed components.",
+            "line": 233,
+            "description": "Create 3D Arrow local entity with Placeable, Mesh and Name components.",
             "itemtype": "method",
             "name": "scene.CreateLocalEntity",
             "params": [
                 {
                     "name": "components",
-                    "description": "Array of components",
+                    "description": "Creates entity with listed components",
                     "type": "Array"
                 }
             ],
@@ -501,7 +501,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 241,
+            "line": 240,
             "description": "Set entity's name.",
             "itemtype": "method",
             "name": "entity.SetName",
@@ -516,7 +516,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 248,
+            "line": 247,
             "description": "Set mesh reference of entity.",
             "itemtype": "method",
             "name": "entity.mesh.meshRef",
@@ -531,7 +531,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 255,
+            "line": 254,
             "description": "Set mesh material of entity.",
             "itemtype": "method",
             "name": "entity.mesh.meshMaterial",
@@ -546,7 +546,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 264,
+            "line": 263,
             "description": "Parents this entity to another entity.",
             "itemtype": "method",
             "name": "entity.placeable.SetParent",
@@ -566,7 +566,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 272,
+            "line": 271,
             "description": "Set transformation of entity.",
             "itemtype": "method",
             "name": "entity.placeable.transform",
@@ -574,7 +574,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 284,
+            "line": 283,
             "description": "Send new parent entity reference value to all slave clients if user changes that.",
             "itemtype": "method",
             "name": "ParentEntityRefChanged",
@@ -589,10 +589,10 @@
         },
         {
             "file": "masterclient.js",
-            "line": 293,
-            "description": "Represents an executable command on entity.",
+            "line": 292,
+            "description": "Represents an executable command on the Void-entity.",
             "itemtype": "method",
-            "name": "entity.Exec",
+            "name": "voidEntity.Exec",
             "params": [
                 {
                     "name": "ExecType",
@@ -624,33 +624,15 @@
         },
         {
             "file": "masterclient.js",
-            "line": 304,
-            "description": "Gets entity.",
-            "itemtype": "method",
-            "name": "scene.GetEntityRaw",
-            "params": [
-                {
-                    "name": "ID",
-                    "description": "",
-                    "type": "Object"
-                }
-            ],
-            "return": {
-                "description": "Entity"
-            },
-            "class": "MasterClass"
-        },
-        {
-            "file": "masterclient.js",
-            "line": 314,
-            "description": "Create Info widgets and layout for them.",
+            "line": 306,
+            "description": "Create Info widgets and layout for them",
             "itemtype": "method",
             "name": "setInfoWidgetLayout",
             "class": "MasterClass"
         },
         {
             "file": "masterclient.js",
-            "line": 322,
+            "line": 314,
             "description": "Sets the layout manager for mainWidget.",
             "itemtype": "method",
             "name": "mainWidget.setLayout",
@@ -664,7 +646,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 329,
+            "line": 321,
             "description": "Sets both the minimum and maximum width of mainWidget.",
             "itemtype": "method",
             "name": "mainWidget.setFixedWidth",
@@ -678,7 +660,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 336,
+            "line": 328,
             "description": "Adds the given widget to the cell grid at row, column. The top-left position is (0, 0) by default.",
             "itemtype": "method",
             "name": "layout.addWidget",
@@ -703,7 +685,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 349,
+            "line": 341,
             "description": "Sets the left, top, right, and bottom margins to use around the layout.",
             "itemtype": "method",
             "name": "layout.setContentsMargins",
@@ -733,7 +715,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 359,
+            "line": 351,
             "description": "Sets spacing between widgets inside the layout.",
             "itemtype": "method",
             "name": "layout.setSpacing",
@@ -749,7 +731,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 366,
+            "line": 358,
             "description": "This property holds the scene rectangle; the bounding rectangle of the scene.",
             "itemtype": "method",
             "name": "ui.GraphicsScene().sceneRect",
@@ -761,7 +743,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 373,
+            "line": 365,
             "description": "Creates a proxy widget for the widget and adds it to the main graphics scene.",
             "itemtype": "method",
             "name": "ui.AddWidgetToScene",
@@ -780,7 +762,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 381,
+            "line": 373,
             "itemtype": "attribute",
             "name": "infoWidgetProxy.windowFlags",
             "type": "Enum 0=Widget, 1=Window, 2=Dialog, 8=Popup, 0xA=Tool, 0xC=ToolTip, 0xE=SplashScreen...",
@@ -789,7 +771,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 388,
+            "line": 380,
             "itemtype": "attribute",
             "name": "infoWidgetProxy.visible",
             "type": "Boolean",
@@ -797,7 +779,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 394,
+            "line": 386,
             "itemtype": "attribute",
             "name": "infoWidgetProxy.y",
             "type": "Number",
@@ -805,7 +787,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 400,
+            "line": 392,
             "itemtype": "attribute",
             "name": "infoWidgetProxy.x",
             "type": "Number",
@@ -813,7 +795,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 406,
+            "line": 398,
             "description": "Customize the look of widget.",
             "itemtype": "method",
             "name": "mainWidget.setStyleSheet",
@@ -828,7 +810,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 413,
+            "line": 405,
             "description": "Sets the level of opacity for the window (widget). Default 1.0",
             "itemtype": "method",
             "name": "mainWidget.setWindowOpacity",
@@ -843,7 +825,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 423,
+            "line": 416,
             "description": "Create Helper widget",
             "itemtype": "method",
             "name": "helpWidget",
@@ -851,7 +833,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 431,
+            "line": 424,
             "description": "Set the label's text.",
             "itemtype": "attribute",
             "name": "QLabel.text",
@@ -860,7 +842,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 458,
+            "line": 451,
             "description": "Adds proxy widget to the scene",
             "itemtype": "method",
             "name": "ui.AddProxyWidgetToScene",
@@ -875,7 +857,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 468,
+            "line": 461,
             "description": "Resize black block sizes on screen edges",
             "itemtype": "method",
             "name": "LetterBox",
@@ -890,7 +872,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 481,
+            "line": 474,
             "description": "Gets main application window",
             "itemtype": "method",
             "name": "ui.MainWindow",
@@ -902,10 +884,10 @@
         },
         {
             "file": "masterclient.js",
-            "line": 488,
+            "line": 481,
             "description": "Get main window height",
             "itemtype": "method",
-            "name": "ui.MainWindow.size.height",
+            "name": "mainwin.size.height",
             "return": {
                 "description": "height",
                 "type": "Number"
@@ -914,10 +896,10 @@
         },
         {
             "file": "masterclient.js",
-            "line": 495,
+            "line": 488,
             "description": "Get main window width",
             "itemtype": "method",
-            "name": "ui.MainWindow.size.width",
+            "name": "mainwin.size.width",
             "return": {
                 "description": "width",
                 "type": "Number"
@@ -926,7 +908,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 522,
+            "line": 515,
             "description": "Used here to set the item's color.",
             "itemtype": "method",
             "name": "QGraphicsPolygonItem.setBrush",
@@ -941,7 +923,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 530,
+            "line": 523,
             "description": "Set item's opacity.",
             "itemtype": "method",
             "name": "QGraphicsPolygonItem.setOpacity",
@@ -956,7 +938,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 538,
+            "line": 531,
             "description": "Add item.",
             "itemtype": "method",
             "name": "ui.GraphicsScene().addItem",
@@ -971,7 +953,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 548,
+            "line": 541,
             "description": "Move master camera forward or backward",
             "itemtype": "method",
             "name": "MoveCameras",
@@ -986,7 +968,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 575,
+            "line": 568,
             "description": "Set new x coordinate point of InfoWidget if window size resized.",
             "itemtype": "method",
             "name": "windowResized",
@@ -1001,7 +983,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 586,
+            "line": 579,
             "description": "Emitted when it is time for client code to update their applications.",
             "itemtype": "method",
             "name": "Update",
@@ -1016,7 +998,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 593,
+            "line": 586,
             "description": "Begin profiling a piece of code.",
             "itemtype": "method",
             "name": "profiler.BeginBlock",
@@ -1031,7 +1013,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 610,
+            "line": 603,
             "description": "Returns the orientation of entity's transform.",
             "itemtype": "method",
             "name": "entity.placeable.Orientation",
@@ -1046,7 +1028,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 617,
+            "line": 610,
             "description": "Sets the position of entity's transform.",
             "itemtype": "method",
             "name": "entity.placeable.SetPosition",
@@ -1061,7 +1043,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 627,
+            "line": 620,
             "description": "Create MasterClient-entity which handles MasterClient components",
             "itemtype": "method",
             "name": "createMasterClient",
@@ -1069,7 +1051,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 636,
+            "line": 629,
             "description": "Sets entity's temporary value to true",
             "itemtype": "method",
             "name": "entity.SetTemporary",
@@ -1084,7 +1066,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 648,
+            "line": 641,
             "description": "Set MasterCamera parameters. MasterCamera is responsible for showing proper viewport of MasterClient.",
             "itemtype": "method",
             "name": "setMasterCamera",
@@ -1092,7 +1074,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 654,
+            "line": 647,
             "description": "Gets camera component of entity.",
             "itemtype": "method",
             "name": "entity.camera",
@@ -1104,7 +1086,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 661,
+            "line": 654,
             "itemtype": "attribute",
             "name": "camera.verticalFov",
             "type": "Number",
@@ -1112,7 +1094,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 667,
+            "line": 660,
             "description": "Activates camera component.",
             "itemtype": "method",
             "name": "camera.SetActive",
@@ -1120,7 +1102,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 674,
+            "line": 667,
             "description": "Set initial spawn point",
             "itemtype": "method",
             "name": "setSpawnPoint",
@@ -1128,7 +1110,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 686,
+            "line": 679,
             "description": "Create handler for keyboard and mouse events",
             "itemtype": "method",
             "name": "createInputHandler",
@@ -1136,7 +1118,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 692,
+            "line": 685,
             "description": "Creates a new input context.",
             "itemtype": "method",
             "name": "input.RegisterInputContextRaw",
@@ -1156,7 +1138,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 700,
+            "line": 693,
             "description": "Set to true to receive mouse input events even when the mouse cursor is over a Qt widget.",
             "itemtype": "attribute",
             "name": "inputContext.takeMouseEventsOverQt",
@@ -1165,7 +1147,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 707,
+            "line": 700,
             "description": "Connect key press handler.",
             "itemtype": "event",
             "name": "inputContext.KeyPressed.connect",
@@ -1180,7 +1162,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 714,
+            "line": 707,
             "description": "Connect key release handler.",
             "itemtype": "event",
             "name": "inputContext.KeyReleased.connect",
@@ -1195,7 +1177,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 721,
+            "line": 714,
             "description": "Connect mouse event handler.",
             "itemtype": "event",
             "name": "inputContext.MouseEventReceived.connect",
@@ -1210,7 +1192,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 730,
+            "line": 723,
             "description": "Handler for key press commands",
             "itemtype": "method",
             "name": "HandleKeyPress",
@@ -1225,7 +1207,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 790,
+            "line": 783,
             "description": "Round a number upward to it's nearest integer.",
             "itemtype": "method",
             "name": "Math.ceil",
@@ -1244,7 +1226,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 814,
+            "line": 807,
             "description": "Round a number downward  to it's nearest integer.",
             "itemtype": "method",
             "name": "Math.floor",
@@ -1263,7 +1245,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 882,
+            "line": 874,
             "description": "Rotates QPixmap object around its center.",
             "itemtype": "method",
             "name": "QPixmap.setRotation",
@@ -1278,7 +1260,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 930,
+            "line": 923,
             "description": "Hide QPixmap object.",
             "itemtype": "method",
             "name": "QPixmap.hide",
@@ -1287,7 +1269,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 938,
+            "line": 931,
             "description": "Removes mesh.",
             "itemtype": "method",
             "name": "entity.mesh.RemoveMesh",
@@ -1295,7 +1277,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 949,
+            "line": 942,
             "description": "Show hidden QPixmap object.",
             "itemtype": "method",
             "name": "QPixmap.show",
@@ -1304,7 +1286,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 971,
+            "line": 964,
             "description": "Handler for key release commands (stop movement)",
             "itemtype": "method",
             "name": "HandleKeyRelease",
@@ -1315,11 +1297,14 @@
                     "type": "KeyEvent"
                 }
             ],
+            "return": {
+                "description": ""
+            },
             "class": "MasterClass"
         },
         {
             "file": "masterclient.js",
-            "line": 997,
+            "line": 991,
             "description": "Handler for mouse events",
             "itemtype": "method",
             "name": "HandleMouse",
@@ -1334,7 +1319,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 1021,
+            "line": 1015,
             "description": "Handler for mouse x axis relative movement (rotate camera)",
             "itemtype": "method",
             "name": "HandleMouseLookX",
@@ -1349,7 +1334,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 1041,
+            "line": 1035,
             "description": "Description",
             "itemtype": "method",
             "name": "HandleMouseLookY",
@@ -1367,7 +1352,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 1059,
+            "line": 1053,
             "description": "Changes forward direction and rotate 3D Arrow by RMB",
             "itemtype": "method",
             "name": "ChangeForwardDirectionByMouse",
@@ -1382,7 +1367,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 1086,
+            "line": 1080,
             "description": "Displays compass and compass needle on screen",
             "itemtype": "method",
             "name": "drawCompass",
@@ -1390,7 +1375,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 1092,
+            "line": 1086,
             "description": "This path specifies a local filename from which this asset can be reloaded if necessary.",
             "itemtype": "method",
             "name": "asset.GetAsset(path+filename).DiskSource",
@@ -1398,7 +1383,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 1099,
+            "line": 1093,
             "description": "Creates and adds a pixmap item to the scene.",
             "itemtype": "method",
             "name": "ui.GraphicsScene().addPixmap",
@@ -1413,7 +1398,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 1107,
+            "line": 1101,
             "description": "Sets transformation origin point. For example for standard rotation, set x and y values to the center of image.",
             "itemtype": "method",
             "name": "QPixmap.setTransformOriginPoint",
@@ -1433,7 +1418,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 1116,
+            "line": 1110,
             "description": "Remove FreeLookCamera from the scene",
             "itemtype": "method",
             "name": "removeFreeLookCamera",
@@ -1441,7 +1426,7 @@
         },
         {
             "file": "masterclient.js",
-            "line": 1130,
+            "line": 1124,
             "description": "Shows status messages in widget5",
             "itemtype": "method",
             "name": "UpdateStatus",
@@ -1465,15 +1450,16 @@
         },
         {
             "file": "server.js",
-            "line": 37,
+            "line": 31,
             "description": "Create Void-entity with Placeable and Camera components.",
             "itemtype": "method",
             "name": "createVoidEntity",
+            "static": 1,
             "class": "ServerClass"
         },
         {
             "file": "server.js",
-            "line": 44,
+            "line": 39,
             "description": "Creates new entity that contains the specified components.",
             "itemtype": "method",
             "name": "scene.CreateEntity",
@@ -1512,7 +1498,7 @@
         },
         {
             "file": "server.js",
-            "line": 64,
+            "line": 56,
             "description": "Set Void-entity's name.",
             "itemtype": "method",
             "name": "voidEntity.SetName",
@@ -1527,7 +1513,7 @@
         },
         {
             "file": "server.js",
-            "line": 71,
+            "line": 63,
             "description": "Sets Void-entity's temporary value to true",
             "itemtype": "method",
             "name": "voidEntity.SetTemporary",
@@ -1542,7 +1528,7 @@
         },
         {
             "file": "server.js",
-            "line": 78,
+            "line": 70,
             "description": "Sets Void-entity's camera component active",
             "itemtype": "method",
             "name": "voidEntity.camera.SetActive",
@@ -1550,7 +1536,7 @@
         },
         {
             "file": "server.js",
-            "line": 87,
+            "line": 79,
             "description": "Remove FreeLookCamera from the scene.",
             "itemtype": "method",
             "name": "removeFreeLookCamera",
@@ -1558,7 +1544,7 @@
         },
         {
             "file": "server.js",
-            "line": 93,
+            "line": 85,
             "description": "Get entity by name.",
             "itemtype": "method",
             "name": "scene.GetEntityByName",
@@ -1577,7 +1563,7 @@
         },
         {
             "file": "server.js",
-            "line": 101,
+            "line": 93,
             "description": "Remove FreeLookCamera entity if found",
             "itemtype": "method",
             "name": "scene.RemoveEntity",
@@ -1605,131 +1591,12 @@
             "description": "Slave class initialisation.",
             "itemtype": "method",
             "name": "init",
+            "static": 1,
             "class": "SlaveClass"
         },
         {
             "file": "slaveclients.js",
-            "line": 64,
-            "description": "Connect camera movement handler.",
-            "itemtype": "event",
-            "name": "entity.Action(\"MSG_MOVE_CAM\").Triggered.connect",
-            "params": [
-                {
-                    "name": "MoveCameras",
-                    "description": "Function to invoke",
-                    "type": "Object"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 71,
-            "description": "Connect screen letterbox size handler.",
-            "itemtype": "event",
-            "name": "entity.Action(\"MSG_LETTER_BOX\").Triggered.connect",
-            "params": [
-                {
-                    "name": "LetterBox",
-                    "description": "Function to invoke",
-                    "type": "Object"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 78,
-            "description": "Connect status message handler.",
-            "itemtype": "event",
-            "name": "entity.Action(\"MSG_STATUSMSG\").Triggered.connect",
-            "params": [
-                {
-                    "name": "UpdateStatus",
-                    "description": "Function to invoke",
-                    "type": "Object"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 86,
-            "description": "Connect parent entity ref handler.",
-            "itemtype": "event",
-            "name": "entity.Action(\"MSG_PARENT_ENTITY_REF_CHG\").Triggered.connect",
-            "params": [
-                {
-                    "name": "setParentEntityRef",
-                    "description": "Function to invoke",
-                    "type": "Object"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 93,
-            "description": "Connect fov change handler.",
-            "itemtype": "event",
-            "name": "entity.Action(\"MSG_FOV_CHG\").Triggered.connect",
-            "params": [
-                {
-                    "name": "ChangeFov",
-                    "description": "Function to invoke",
-                    "type": "Object"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 100,
-            "description": "Connect camera reset handler.",
-            "itemtype": "event",
-            "name": "entity.Action(\"MSG_RESET_CAMERAS\").Triggered.connect",
-            "params": [
-                {
-                    "name": "ResetCameras",
-                    "description": "Function to invoke",
-                    "type": "Object"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 107,
-            "description": "Connect 3D Arrow rotate handler.",
-            "itemtype": "event",
-            "name": "entity.Action(\"MSG_ROTATE_ARROW\").Triggered.connect",
-            "params": [
-                {
-                    "name": "RotateArrow",
-                    "description": "Function to invoke",
-                    "type": "Object"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 114,
-            "description": "Connect widget handler.",
-            "itemtype": "event",
-            "name": "entity.Action(\"MSG_TOGGLE_WIDGETS\").Triggered.connect",
-            "params": [
-                {
-                    "name": "ToggleWidgets",
-                    "description": "Function to invoke",
-                    "type": "Object"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 121,
+            "line": 60,
             "description": "Connect window resize listener.",
             "itemtype": "event",
             "name": "ui.GraphicsScene().sceneRectChanged.connect",
@@ -1744,122 +1611,165 @@
         },
         {
             "file": "slaveclients.js",
-            "line": 130,
-            "description": "Clear scene if there is already 3D Arrow entity. This occurs if Script is reloaded without quitting it first",
+            "line": 67,
+            "description": "Connect camera fov handler.",
+            "itemtype": "event",
+            "name": "entity.Action(\"MSG_FOV_CHG\").Triggered.connect",
+            "params": [
+                {
+                    "name": "MoveCameras",
+                    "description": "Function to invoke",
+                    "type": "Object"
+                }
+            ],
+            "class": "SlaveClass"
+        },
+        {
+            "file": "slaveclients.js",
+            "line": 74,
+            "description": "Connect attribute change listener.",
+            "itemtype": "event",
+            "name": "entity.placeable.AttributeChanged.connect",
+            "params": [
+                {
+                    "name": "ParentEntityRefChanged",
+                    "description": "Function to invoke",
+                    "type": "Object"
+                }
+            ],
+            "class": "SlaveClass"
+        },
+        {
+            "file": "slaveclients.js",
+            "line": 81,
+            "description": "Connect camera movement handler.",
+            "itemtype": "event",
+            "name": "entity.Action(\"MSG_MOVE_CAM\").Triggered.connect",
+            "params": [
+                {
+                    "name": "MoveCameras",
+                    "description": "Function to invoke",
+                    "type": "Object"
+                }
+            ],
+            "class": "SlaveClass"
+        },
+        {
+            "file": "slaveclients.js",
+            "line": 88,
+            "description": "Connect camera reset handler.",
+            "itemtype": "event",
+            "name": "entity.Action(\"MSG_RESET_CAMERAS\").Triggered.connect",
+            "params": [
+                {
+                    "name": "MoveCameras",
+                    "description": "Function to invoke",
+                    "type": "Object"
+                }
+            ],
+            "class": "SlaveClass"
+        },
+        {
+            "file": "slaveclients.js",
+            "line": 95,
+            "description": "Connect screen letterbox size handler.",
+            "itemtype": "event",
+            "name": "entity.Action(\"MSG_LETTER_BOX\").Triggered.connect",
+            "params": [
+                {
+                    "name": "LetterBox",
+                    "description": "Function to invoke",
+                    "type": "Object"
+                }
+            ],
+            "class": "SlaveClass"
+        },
+        {
+            "file": "slaveclients.js",
+            "line": 102,
+            "description": "Connect 3DArrow rotation handler.",
+            "itemtype": "event",
+            "name": "entity.Action(\"MSG_ROTATE_ARROW\").Triggered.connect",
+            "params": [
+                {
+                    "name": "UpdateStatus",
+                    "description": "Function to invoke",
+                    "type": "Object"
+                }
+            ],
+            "class": "SlaveClass"
+        },
+        {
+            "file": "slaveclients.js",
+            "line": 109,
+            "description": "Connect widgets visibility handler.",
+            "itemtype": "event",
+            "name": "entity.Action(\"MSG_TOGGLE_WIDGETS\").Triggered.connect",
+            "params": [
+                {
+                    "name": "UpdateStatus",
+                    "description": "Function to invoke",
+                    "type": "Object"
+                }
+            ],
+            "class": "SlaveClass"
+        },
+        {
+            "file": "slaveclients.js",
+            "line": 116,
+            "description": "Connect status message handler.",
+            "itemtype": "event",
+            "name": "entity.Action(\"MSG_STATUSMSG\").Triggered.connect",
+            "params": [
+                {
+                    "name": "UpdateStatus",
+                    "description": "Function to invoke",
+                    "type": "Object"
+                }
+            ],
+            "class": "SlaveClass"
+        },
+        {
+            "file": "slaveclients.js",
+            "line": 124,
+            "description": "Clears duplicates from scene when Script is (re)loaded",
             "itemtype": "method",
             "name": "clearScene",
             "class": "SlaveClass"
         },
         {
             "file": "slaveclients.js",
-            "line": 139,
-            "description": "Remove (old) Arrow entity if found",
-            "itemtype": "method",
-            "name": "scene.RemoveEntity",
-            "params": [
-                {
-                    "name": "oldArrow.Id",
-                    "description": "Arrow's id number",
-                    "type": "Number"
-                },
-                {
-                    "name": "AttributeChange=Default",
-                    "description": "Enumeration of attribute/component change types for replication. (2=LocalOnly, 3=Replicate)",
-                    "type": "Enum"
-                }
-            ],
-            "return": {
-                "description": "Return true if entity has been found and removed.",
-                "type": "Boolean"
-            },
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 151,
-            "description": "Create Info widgets and layout for them.",
+            "line": 138,
+            "description": "Create Info widgets and layout for them",
             "itemtype": "method",
             "name": "setInfoWidgetLayout",
             "class": "SlaveClass"
         },
         {
             "file": "slaveclients.js",
-            "line": 159,
-            "description": "Sets the layout manager for mainWidget.",
+            "line": 165,
+            "description": "Toggle widgets on and off",
             "itemtype": "method",
-            "name": "mainWidget.setLayout",
+            "name": "ToggleWidgets",
             "params": [
                 {
-                    "name": "layout",
-                    "description": "(QLayout)"
+                    "name": "param",
+                    "description": "hide/show",
+                    "type": "String"
                 }
             ],
             "class": "SlaveClass"
         },
         {
             "file": "slaveclients.js",
-            "line": 166,
-            "description": "Sets both the minimum and maximum width of mainWidget.",
+            "line": 184,
+            "description": "Rotate 3D Arrow by a given amount.",
             "itemtype": "method",
-            "name": "mainWidget.setFixedWidth",
+            "name": "RotateArrow",
             "params": [
                 {
-                    "name": "w",
-                    "description": "(Number)"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 173,
-            "description": "Adds the given widget to the cell grid at row, column. The top-left position is (0, 0) by default.",
-            "itemtype": "method",
-            "name": "layout.addWidget",
-            "params": [
-                {
-                    "name": "widget",
-                    "description": "",
-                    "type": "QWidget"
-                },
-                {
-                    "name": "row",
-                    "description": "",
-                    "type": "Number"
-                },
-                {
-                    "name": "column",
-                    "description": "",
-                    "type": "Number"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 186,
-            "description": "Sets the left, top, right, and bottom margins to use around the layout.",
-            "itemtype": "method",
-            "name": "layout.setContentsMargins",
-            "params": [
-                {
-                    "name": "left",
-                    "description": "",
-                    "type": "Number"
-                },
-                {
-                    "name": "top",
-                    "description": "",
-                    "type": "Number"
-                },
-                {
-                    "name": "right",
-                    "description": "",
-                    "type": "Number"
-                },
-                {
-                    "name": "bottom",
-                    "description": "",
+                    "name": "param",
+                    "description": "amount",
                     "type": "Number"
                 }
             ],
@@ -1868,147 +1778,7 @@
         {
             "file": "slaveclients.js",
             "line": 196,
-            "description": "Sets spacing between widgets inside the layout.",
-            "itemtype": "method",
-            "name": "layout.setSpacing",
-            "params": [
-                {
-                    "name": "i",
-                    "description": "",
-                    "type": "Number",
-                    "optional": true
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 203,
-            "description": "This property holds the scene rectangle; the bounding rectangle of the scene.",
-            "itemtype": "method",
-            "name": "ui.GraphicsScene().sceneRect",
-            "return": {
-                "description": "Rectangle in the plane using floating point precision",
-                "type": "QRectF"
-            },
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 210,
-            "description": "Creates a proxy widget for the widget and adds it to the main graphics scene.",
-            "itemtype": "method",
-            "name": "ui.AddWidgetToScene",
-            "params": [
-                {
-                    "name": "widget",
-                    "description": "",
-                    "type": "QWidget"
-                }
-            ],
-            "return": {
-                "description": "Proxy widget",
-                "type": "QGraphicsProxyWidget"
-            },
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 218,
-            "itemtype": "attribute",
-            "name": "infoWidgetProxy.windowFlags",
-            "type": "Enum 0=Widget, 1=Window, 2=Dialog, 8=Popup, 0xA=Tool, 0xC=ToolTip, 0xE=SplashScreen...",
-            "default": "0",
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 225,
-            "itemtype": "attribute",
-            "name": "infoWidgetProxy.visible",
-            "type": "Boolean",
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 231,
-            "itemtype": "attribute",
-            "name": "infoWidgetProxy.y",
-            "type": "Number",
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 237,
-            "itemtype": "attribute",
-            "name": "infoWidgetProxy.x",
-            "type": "Number",
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 243,
-            "description": "Customize the look of widget.",
-            "itemtype": "method",
-            "name": "mainWidget.setStyleSheet",
-            "params": [
-                {
-                    "name": "widget&styleSheet",
-                    "description": "setStyleSheet(widget {styleSheet})",
-                    "type": "Mixed"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 250,
-            "description": "Sets the level of opacity for the window (widget). Default 1.0",
-            "itemtype": "method",
-            "name": "mainWidget.setWindowOpacity",
-            "params": [
-                {
-                    "name": "level",
-                    "description": "",
-                    "type": "Qreal"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 260,
-            "description": "Toggle widgets on and off",
-            "itemtype": "method",
-            "name": "ToggleWidgets",
-            "params": [
-                {
-                    "name": "param",
-                    "description": "hide|show",
-                    "type": "String"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 279,
-            "description": "Rotate 3D Arrow by a given amount.",
-            "itemtype": "method",
-            "name": "RotateArrow",
-            "params": [
-                {
-                    "name": "param",
-                    "description": "Amount",
-                    "type": "Number"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 291,
-            "description": "Resize black block sizes on screen edges",
+            "description": "Resize black block sizes on screen edges.",
             "itemtype": "method",
             "name": "LetterBox",
             "params": [
@@ -2022,95 +1792,14 @@
         },
         {
             "file": "slaveclients.js",
-            "line": 304,
-            "description": "Gets main application window",
-            "itemtype": "method",
-            "name": "ui.MainWindow",
-            "return": {
-                "description": "Main window",
-                "type": "Object"
-            },
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 311,
-            "description": "Get main window height",
-            "itemtype": "method",
-            "name": "ui.MainWindow.size.height",
-            "return": {
-                "description": "height",
-                "type": "Number"
-            },
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 318,
-            "description": "Get main window width",
-            "itemtype": "method",
-            "name": "ui.MainWindow.size.width",
-            "return": {
-                "description": "width",
-                "type": "Number"
-            },
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 345,
-            "description": "Used here to set the item's color.",
-            "itemtype": "method",
-            "name": "QGraphicsPolygonItem.setBrush",
-            "params": [
-                {
-                    "name": "color",
-                    "description": "Brush color",
-                    "type": "QColor"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 353,
-            "description": "Set item's opacity.",
-            "itemtype": "method",
-            "name": "QGraphicsPolygonItem.setOpacity",
-            "params": [
-                {
-                    "name": "level",
-                    "description": "",
-                    "type": "Qreal"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 361,
-            "description": "Add item.",
-            "itemtype": "method",
-            "name": "ui.GraphicsScene().addItem",
-            "params": [
-                {
-                    "name": "param",
-                    "description": "Item to add",
-                    "type": "Object"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 371,
-            "description": "Move master camera forward or backward",
+            "line": 239,
+            "description": "Move master camera forward or backward.",
             "itemtype": "method",
             "name": "MoveCameras",
             "params": [
                 {
                     "name": "param",
-                    "description": "forward|backward",
+                    "description": "forward/backward",
                     "type": "String"
                 }
             ],
@@ -2118,7 +1807,7 @@
         },
         {
             "file": "slaveclients.js",
-            "line": 396,
+            "line": 263,
             "description": "Reset positions of SlaveClient entity and SlaveCamera.",
             "itemtype": "method",
             "name": "ResetCameras",
@@ -2126,7 +1815,7 @@
         },
         {
             "file": "slaveclients.js",
-            "line": 412,
+            "line": 278,
             "description": "Set new parent entity reference value.",
             "itemtype": "method",
             "name": "setParentEntityRef",
@@ -2141,45 +1830,7 @@
         },
         {
             "file": "slaveclients.js",
-            "line": 419,
-            "description": "Gets entity.",
-            "itemtype": "method",
-            "name": "scene.GetEntityRaw",
-            "params": [
-                {
-                    "name": "ID",
-                    "description": "",
-                    "type": "Object"
-                }
-            ],
-            "return": {
-                "description": "Entity"
-            },
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 428,
-            "description": "Parents this entity to another entity.",
-            "itemtype": "method",
-            "name": "entity.placeable.SetParent",
-            "params": [
-                {
-                    "name": "entity",
-                    "description": "Parenting refers to this entity (Void-entity)",
-                    "type": "Object"
-                },
-                {
-                    "name": "preserveWorldTransform=false",
-                    "description": "When false, the transform attribute of this placeable is treated as the new local",
-                    "type": "Boolean"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 437,
+            "line": 290,
             "description": "Change fov value.",
             "itemtype": "method",
             "name": "ChangeFov",
@@ -2194,7 +1845,7 @@
         },
         {
             "file": "slaveclients.js",
-            "line": 448,
+            "line": 301,
             "description": "Set new x coordinate point of InfoWidget if window size resized.",
             "itemtype": "method",
             "name": "windowResized",
@@ -2209,60 +1860,15 @@
         },
         {
             "file": "slaveclients.js",
-            "line": 458,
-            "description": "Create SlaveClient-entity which handles SlaveClient components",
+            "line": 311,
+            "description": "Create SlaveClient-entity which handles SlaveClient components.",
             "itemtype": "method",
             "name": "createSlaveClient",
             "class": "SlaveClass"
         },
         {
             "file": "slaveclients.js",
-            "line": 464,
-            "description": "Create local entity with listed components.",
-            "itemtype": "method",
-            "name": "scene.CreateLocalEntity",
-            "params": [
-                {
-                    "name": "components",
-                    "description": "Array of components",
-                    "type": "Array"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 471,
-            "description": "Set entity's name.",
-            "itemtype": "method",
-            "name": "entity.SetName",
-            "params": [
-                {
-                    "name": "param",
-                    "description": "",
-                    "type": "String"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 478,
-            "description": "Sets entity's temporary value to true",
-            "itemtype": "method",
-            "name": "entity.SetTemporary",
-            "params": [
-                {
-                    "name": "param",
-                    "description": "",
-                    "type": "Boolean"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 491,
+            "line": 327,
             "description": "Set SlaveCamera parameters. SlaveCamera is responsible for showing proper viewport of SlaveClient.",
             "itemtype": "method",
             "name": "setSlaveCamera",
@@ -2270,139 +1876,23 @@
         },
         {
             "file": "slaveclients.js",
-            "line": 497,
-            "description": "Gets camera component of entity.",
-            "itemtype": "method",
-            "name": "entity.camera",
-            "return": {
-                "description": "Camera object",
-                "type": "Object"
-            },
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 506,
-            "itemtype": "attribute",
-            "name": "camera.verticalFov",
-            "type": "Number",
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 518,
-            "description": "Activates camera component.",
-            "itemtype": "method",
-            "name": "camera.SetActive",
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 529,
-            "description": "Create 3D Arrow entity.",
+            "line": 348,
+            "description": "Creaty.e 3D Arrow entit",
             "itemtype": "method",
             "name": "create3DArrow",
             "class": "SlaveClass"
         },
         {
             "file": "slaveclients.js",
-            "line": 535,
-            "description": "Create local entity with listed components.",
-            "itemtype": "method",
-            "name": "scene.CreateLocalEntity",
-            "params": [
-                {
-                    "name": "components",
-                    "description": "Array of components",
-                    "type": "Array"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 542,
-            "description": "Set entity's name.",
-            "itemtype": "method",
-            "name": "entity.SetName",
-            "params": [
-                {
-                    "name": "param",
-                    "description": "",
-                    "type": "String"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 548,
-            "description": "Set mesh reference of entity.",
-            "itemtype": "method",
-            "name": "entity.mesh.meshRef",
-            "params": [
-                {
-                    "name": "param",
-                    "description": "Mesh file name and path",
-                    "type": "String"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 555,
-            "description": "Set mesh material of entity.",
-            "itemtype": "method",
-            "name": "entity.mesh.meshMaterial",
-            "params": [
-                {
-                    "name": "param",
-                    "description": "Mesh material file name and path",
-                    "type": "String"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 564,
-            "description": "Parents this entity to another entity.",
-            "itemtype": "method",
-            "name": "entity.placeable.SetParent",
-            "params": [
-                {
-                    "name": "entity",
-                    "description": "Parenting refers to this entity (Void-entity)",
-                    "type": "Object"
-                },
-                {
-                    "name": "preserveWorldTransform=false",
-                    "description": "When false, the transform attribute of this placeable is treated as the new local",
-                    "type": "Boolean"
-                }
-            ],
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 572,
-            "description": "Set transformation of entity.",
-            "itemtype": "method",
-            "name": "entity.placeable.transform",
-            "class": "SlaveClass"
-        },
-        {
-            "file": "slaveclients.js",
-            "line": 583,
-            "description": "Remove FreeLookCamera from the scene",
+            "line": 368,
+            "description": "Remove FreeLookCamera from the scene.",
             "itemtype": "method",
             "name": "removeFreeLookCamera",
             "class": "SlaveClass"
         },
         {
             "file": "slaveclients.js",
-            "line": 597,
+            "line": 383,
             "description": "Shows status messages in widget5",
             "itemtype": "method",
             "name": "UpdateStatus",

@@ -117,24 +117,22 @@ var DEFAULT_A3D_ROT = new float3(0,-90,0); // Initial value of 3D Arrow&#x27;s r
 var DEFAULT_A3D_SA = new float3(0.1,0.01,0.1); // Initial value of 3D Arrow&#x27;s scale
 var camAng; // Variable for trigonometric calculations of camera in radians
 
-
 /**
 The SlaveClass class.
 @class SlaveClass
 @extension LoaderClass
 @constructor
 */
+
 var SlaveClass = Class.extend
 ({
 	/**
 	 * Slave class initialisation.
 	 * @method init
+	 * @static
 	 */
 	init: function()
 	{
-
-		//frame.Updated.connect(function(){widget5.text=frame.WallClockTime()}); //added 13.5
-		
 		Log(&quot;**** Creating slave client objects&quot;);
 
 		this.clearScene();
@@ -143,210 +141,117 @@ var SlaveClass = Class.extend
 		this.setSlaveCamera();
 		this.create3DArrow();
 		this.removeFreeLookCamera();
-		
-		// Connect global messages to corresponding slots
-		
+
+		/**
+		 * Connect window resize listener.
+		 * @event ui.GraphicsScene().sceneRectChanged.connect
+		 * @param windowResized {Object} Function to invoke
+		*/
+		ui.GraphicsScene().sceneRectChanged.connect(this, this.windowResized);
+
+		/**
+		 * Connect camera fov handler.
+		 * @event entity.Action(&quot;MSG_FOV_CHG&quot;).Triggered.connect
+		 * @param MoveCameras {Object} Function to invoke
+		*/
+		voidEntity.Action(&quot;MSG_FOV_CHG&quot;).Triggered.connect(this, this.ChangeFov);
+
+		/**
+		 * Connect attribute change listener.
+		 * @event  entity.placeable.AttributeChanged.connect
+		 * @param ParentEntityRefChanged {Object} Function to invoke
+		*/
+		voidEntity.Action(&quot;MSG_PARENT_ENTITY_REF_CHG&quot;).Triggered.connect(this, this.setParentEntityRef);
+
 		/**
 		 * Connect camera movement handler.
 		 * @event entity.Action(&quot;MSG_MOVE_CAM&quot;).Triggered.connect
 		 * @param MoveCameras {Object} Function to invoke
-		 */		
-		voidEntity.Action(&quot;MSG_MOVE_CAM&quot;).Triggered.connect(this.MoveCameras);
-		
+		*/
+		voidEntity.Action(&quot;MSG_MOVE_CAM&quot;).Triggered.connect(this, this.MoveCameras);
+
+		/**
+		 * Connect camera reset handler.
+		 * @event entity.Action(&quot;MSG_RESET_CAMERAS&quot;).Triggered.connect
+		 * @param MoveCameras {Object} Function to invoke
+		*/
+		voidEntity.Action(&quot;MSG_RESET_CAMERAS&quot;).Triggered.connect(this, this.ResetCameras);
+
 		/**
 		 * Connect screen letterbox size handler.
 		 * @event entity.Action(&quot;MSG_LETTER_BOX&quot;).Triggered.connect
 		 * @param LetterBox {Object} Function to invoke
 		 */
-		voidEntity.Action(&quot;MSG_LETTER_BOX&quot;).Triggered.connect(this.LetterBox);
+		voidEntity.Action(&quot;MSG_LETTER_BOX&quot;).Triggered.connect(this, this.LetterBox);
+
+		/**
+		 * Connect 3DArrow rotation handler.
+		 * @event entity.Action(&quot;MSG_ROTATE_ARROW&quot;).Triggered.connect
+		 * @param UpdateStatus {Object} Function to invoke
+		 */
+		voidEntity.Action(&quot;MSG_ROTATE_ARROW&quot;).Triggered.connect(this, this.RotateArrow);
+
+		/**
+		 * Connect widgets visibility handler.
+		 * @event entity.Action(&quot;MSG_TOGGLE_WIDGETS&quot;).Triggered.connect
+		 * @param UpdateStatus {Object} Function to invoke
+		 */
+		voidEntity.Action(&quot;MSG_TOGGLE_WIDGETS&quot;).Triggered.connect(this, this.ToggleWidgets);
 
 		/**
 		 * Connect status message handler.
 		 * @event entity.Action(&quot;MSG_STATUSMSG&quot;).Triggered.connect
 		 * @param UpdateStatus {Object} Function to invoke
 		 */
-		voidEntity.Action(&quot;MSG_STATUSMSG&quot;).Triggered.connect(this.UpdateStatus); // 
-		voidEntity.Action(&quot;MSG_STATUSMSG2&quot;).Triggered.connect(this.UpdateStatus2); //		
-
-		/**
-		 * Connect parent entity ref handler.
-		 * @event entity.Action(&quot;MSG_PARENT_ENTITY_REF_CHG&quot;).Triggered.connect
-		 * @param setParentEntityRef {Object} Function to invoke
-		 */
-		voidEntity.Action(&quot;MSG_PARENT_ENTITY_REF_CHG&quot;).Triggered.connect(this.setParentEntityRef);
-
-		/**
-		 * Connect fov change handler.
-		 * @event entity.Action(&quot;MSG_FOV_CHG&quot;).Triggered.connect
-		 * @param ChangeFov {Object} Function to invoke
-		 */
-		voidEntity.Action(&quot;MSG_FOV_CHG&quot;).Triggered.connect(this.ChangeFov);
-		
-		/**
-		 * Connect camera reset handler.
-		 * @event entity.Action(&quot;MSG_RESET_CAMERAS&quot;).Triggered.connect
-		 * @param ResetCameras {Object} Function to invoke
-		 */		
-		voidEntity.Action(&quot;MSG_RESET_CAMERAS&quot;).Triggered.connect(this.ResetCameras);
-		
-		/**
-		 * Connect 3D Arrow rotate handler.
-		 * @event entity.Action(&quot;MSG_ROTATE_ARROW&quot;).Triggered.connect
-		 * @param RotateArrow {Object} Function to invoke
-		 */	
-		voidEntity.Action(&quot;MSG_ROTATE_ARROW&quot;).Triggered.connect(this.RotateArrow);
-		
-		/**
-		 * Connect widget handler.
-		 * @event entity.Action(&quot;MSG_TOGGLE_WIDGETS&quot;).Triggered.connect
-		 * @param ToggleWidgets {Object} Function to invoke
-		 */			
-		voidEntity.Action(&quot;MSG_TOGGLE_WIDGETS&quot;).Triggered.connect(this.ToggleWidgets);
-
-		/**
-		 * Connect window resize listener.
-		 * @event ui.GraphicsScene().sceneRectChanged.connect
-		 * @param windowResized {Object} Function to invoke
-		 */		
-		ui.GraphicsScene().sceneRectChanged.connect(this.windowResized);
-
+		voidEntity.Action(&quot;MSG_STATUSMSG&quot;).Triggered.connect(this, this.UpdateStatus);
 	},
-	
+
 	/**
-	 * Clear scene if there is already 3D Arrow entity. This occurs if Script is reloaded without quitting it first
+	 * Clears duplicates from scene when Script is (re)loaded
 	 * @method clearScene
-	 */
+	*/
 	clearScene: function()
 	{
 		var oldarrow = scene.GetEntityByName(&quot;Arrow&quot;);
 		if (oldarrow)
 		{
-			/**
-			 * Remove (old) Arrow entity if found
-			 * @method scene.RemoveEntity
-			 * @param oldArrow.Id {Number} Arrow&#x27;s id number
-			 * @param AttributeChange=Default {Enum} Enumeration of attribute/component change types for replication. (2=LocalOnly, 3=Replicate)
-			 * @return {Boolean} Return true if entity has been found and removed.
-			*/			
-			scene.RemoveEntity(oldarrow.Id(),&#x27;&#x27;);
+			scene.RemoveEntity(oldarrow.id,&#x27;&#x27;);
 			Log(&quot;**** Old Arrow entity removed&quot;);
-		}		
+		}
 	},
-	
+
 	/**
-	 * Create Info widgets and layout for them.
+	 * Create Info widgets and layout for them
 	 * @method setInfoWidgetLayout
 	 */
 	setInfoWidgetLayout: function()
 	{
 		var layout = new QVBoxLayout();
-		
-		/**
-		 * Sets the layout manager for mainWidget.
-		 * @method mainWidget.setLayout
-		 * @param layout (QLayout)
-		 */
 		mainWidget.setLayout(layout);
-		
-		/**
-		 * Sets both the minimum and maximum width of mainWidget.
-		 * @method mainWidget.setFixedWidth
-		 * @param w (Number)
-		 */		
 		mainWidget.setFixedWidth(250);
-		
-		/**
-		 * Adds the given widget to the cell grid at row, column. The top-left position is (0, 0) by default.
-		 * @method layout.addWidget
-		 * @param widget {QWidget}
-		 * @param row {Number}
-		 * @param column {Number}
-		 */
 		layout.addWidget(widget1, 0, 1);
 		layout.addWidget(widget2, 0, 1);
 		layout.addWidget(widget3, 0, 1);
 		layout.addWidget(widget4, 0, 1);
 		layout.addWidget(widget5, 0, 1);
-		
-		/**
-		 * Sets the left, top, right, and bottom margins to use around the layout.
-		 * @method layout.setContentsMargins
-		 * @param left {Number}
-		 * @param top {Number}
-		 * @param right {Number}
-		 * @param bottom {Number}
-		 */
-		layout.setContentsMargins(10,0,10,5);
-		
-		/**
-		 * Sets spacing between widgets inside the layout.
-		 * @method layout.setSpacing
-		 * @param [i] {Number}
-		 */
-		layout.setSpacing(2);
-		
-		/**
-		 * This property holds the scene rectangle; the bounding rectangle of the scene.
-		 * @method ui.GraphicsScene().sceneRect
-		 * @return {QRectF} Rectangle in the plane using floating point precision
-		 */
-		rect = ui.GraphicsScene().sceneRect;
-		
-		/**
-		 * Creates a proxy widget for the widget and adds it to the main graphics scene.
-		 * @method ui.AddWidgetToScene
-		 * @param widget {QWidget}
-		 * @return {QGraphicsProxyWidget} Proxy widget
-		 */
+        layout.setContentsMargins(10,0,10,5);
+        layout.setSpacing(2);
 		infoWidgetProxy = ui.AddWidgetToScene(mainWidget);
-		
-		/**
-		 * @attribute infoWidgetProxy.windowFlags
-		 * @type Enum 0=Widget, 1=Window, 2=Dialog, 8=Popup, 0xA=Tool, 0xC=ToolTip, 0xE=SplashScreen...
-		 * @default 0
-		 */
-		infoWidgetProxy.windowFlags = 0;
-		
-		/**
-		 * @attribute infoWidgetProxy.visible
-		 * @type Boolean
-		 */		
-		infoWidgetProxy.visible = true;
-
-		/**
-		 * @attribute infoWidgetProxy.y
-		 * @type Number
-		 */			
-		infoWidgetProxy.y = 10;
-
-		/**
-		 * @attribute infoWidgetProxy.x
-		 * @type Number
-		 */			
-		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
-		
-		/**
-		 * Customize the look of widget.
-		 * @method mainWidget.setStyleSheet
-		 * @param widget&amp;styleSheet {Mixed} setStyleSheet(widget {styleSheet})
-		 */
 		mainWidget.setStyleSheet(&quot;QLabel {color: black; font-size: 14px;}&quot;);
-
-		/**
-		 * Sets the level of opacity for the window (widget). Default 1.0
-		 * @method mainWidget.setWindowOpacity
-		 * @param level {qreal}
-		 */			
-		mainWidget.setWindowOpacity(0.3);
-		
 		widget1.setStyleSheet(&quot;QLabel {color: blue; font-size: 18px; font-weight: bold;}&quot;);
+		rect = ui.GraphicsScene().sceneRect;
+		infoWidgetProxy.windowFlags = 0;
+		infoWidgetProxy.visible = true;
+		infoWidgetProxy.y = 10;
+		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
+		mainWidget.setWindowOpacity(0.3);
 	},
-	
+
 	/**
 	 * Toggle widgets on and off
 	 * @method ToggleWidgets
-	 * @param param {String} hide|show
-	 */
+	 * @param param {String} hide/show
+	*/
 	ToggleWidgets: function(param)
 	{
 		if (param == &quot;HIDE&quot;)
@@ -360,11 +265,11 @@ var SlaveClass = Class.extend
 			arrow3D.mesh.meshRef = &quot;assets/Arrow.mesh&quot;;
 		}
 	},
-	
+
 	/**
 	 * Rotate 3D Arrow by a given amount.
 	 * @method RotateArrow
-	 * @param param {Number} Amount
+	 * @param param {Number} amount
 	 */
 	RotateArrow: function(param)
 	{
@@ -372,42 +277,23 @@ var SlaveClass = Class.extend
 		arrow3DTransform.rot.y = -90-param;
 		arrow3D.placeable.transform = arrow3DTransform;
 	},
-	
+
 	/**
-	 * Resize black block sizes on screen edges
+	 * Resize black block sizes on screen edges.
 	 * @method LetterBox
-	 * @param size {Number} 
-	 */
-	LetterBox: function(size) 
+	 * @param size {Number}
+	*/
+	LetterBox: function(size)
 	{
 		ui.GraphicsScene().removeItem(block_left);
 		ui.GraphicsScene().removeItem(block_right);
 		if (size!=0)
 		{
 			var color = new QColor(&quot;black&quot;);
-			
-			/**
-			 * Gets main application window
-			 * @method ui.MainWindow
-			 * @return {Object} Main window
-			 */
 			var mainwin = ui.MainWindow();
-			
-			/**
-			 * Get main window height
-			 * @method ui.MainWindow.size.height
-			 * @return {Number} height
-			 */
 			var height = mainwin.size.height();
-			
-			/**
-			 * Get main window width
-			 * @method ui.MainWindow.size.width
-			 * @return {Number} width
-			 */			
 			var width = mainwin.size.width();
-			
-			/* Creates coordinate points and polygons created from them */
+
 			var point_left1 = new QPointF(0,0);
 			var point_left2 = new QPointF(size,0);
 			var point_left3 = new QPointF(size,height);
@@ -415,7 +301,7 @@ var SlaveClass = Class.extend
 			var points_left = new Array(point_left1, point_left2, point_left3, point_left4);
 			var qpoly_left = new QPolygon(points_left);
 			var poly_left = new QPolygonF(qpoly_left);
-			
+
 			var point_right1 = new QPointF(width,0);
 			var point_right2 = new QPointF(width-size,0);
 			var point_right3 = new QPointF(width-size,height);
@@ -423,65 +309,46 @@ var SlaveClass = Class.extend
 			var points_right = new Array(point_right1, point_right2, point_right3, point_right4);
 			var qpoly_right = new QPolygon(points_right);
 			var poly_right = new QPolygonF(qpoly_right);
-			
-			block_left = new QGraphicsPolygonItem(poly_left, 0, scene);	
-			block_right = new QGraphicsPolygonItem(poly_right, 0, scene);
 
-			/**
-			 * Used here to set the item&#x27;s color.
-			 * @method QGraphicsPolygonItem.setBrush
-			 * @param color {QColor} Brush color
-			 */
+			block_left = new QGraphicsPolygonItem(poly_left, 0, scene);
+			block_right = new QGraphicsPolygonItem(poly_right, 0, scene);
 			block_left.setBrush(color);
 			block_right.setBrush(color);
-			
-			/**
-			 * Set item&#x27;s opacity.
-			 * @method QGraphicsPolygonItem.setOpacity
-			 * @param level {qreal}
-			 */			
 			block_left.setOpacity(1.0);
 			block_right.setOpacity(1.0);
-			
-			/**
-			 * Add item.
-			 * @method ui.GraphicsScene().addItem
-			 * @param param {Object} Item to add
-			 */
 			ui.GraphicsScene().addItem(block_left);
 			ui.GraphicsScene().addItem(block_right);
 		}
-	},	
-	
+	},
+
 	/**
-	 * Move master camera forward or backward
+	 * Move master camera forward or backward.
 	 * @method MoveCameras
-	 * @param param {String} forward|backward
-	 */
+	 * @param param {String} forward/backward
+	*/
 	MoveCameras: function(param)
 	{
 		slaveTransform = slaveClient.placeable.transform;
 		camAng = sector*60*Math.PI/180;
-		if (param == &quot;forward&quot;) 
+		if (param == &quot;forward&quot;)
 		{
-			slaveTransform.pos.z -= Math.cos(camAng);    
-			slaveTransform.pos.x += Math.sin(camAng);    
+			slaveTransform.pos.z -= Math.cos(camAng);
+			slaveTransform.pos.x += Math.sin(camAng);
 			slaveClient.placeable.transform = slaveTransform;
 		}
-		else if (param == &quot;backward&quot;) 
+		else if (param == &quot;backward&quot;)
 		{
-			slaveTransform.pos.z += Math.cos(camAng);    
-			slaveTransform.pos.x -= Math.sin(camAng);    
-			slaveClient.placeable.transform = slaveTransform; 
+			slaveTransform.pos.z += Math.cos(camAng);
+			slaveTransform.pos.x -= Math.sin(camAng);
+			slaveClient.placeable.transform = slaveTransform;
 		}
-		//widget5.text = &quot;Camera new z position: &quot;+(-slaveTransform.pos.z);
 		slaveCamera.SetActive();
 	},
-	
+
 	/**
 	 * Reset positions of SlaveClient entity and SlaveCamera.
 	 * @method ResetCameras
-	 */
+	*/
 	ResetCameras: function()
 	{
 		fov = DEFAULT_FOV;
@@ -491,203 +358,123 @@ var SlaveClass = Class.extend
 		arrow3DTransform.pos = DEFAULT_A3D_POS;
 		arrow3D.placeable.transform = arrow3DTransform;
 		slaveClient.placeable.SetPosition(new float3(0,0,0));
-		//widget5.text = &quot;CAMERAS SET TO INITIAL STATE&quot;;		
-	},		
-	
+	},
+
 	/**
 	 * Set new parent entity reference value.
 	 * @method setParentEntityRef
-	 * @param attribute {Object} 
+	 * @param attribute {Object}
 	 */
 	setParentEntityRef: function(attribute)
 	{
-		/**
-		 * Gets entity.
-		 * @method scene.GetEntityRaw
-		 * @param ID {Object}
-		 * @return Entity
-		 */	
 		var entity = scene.GetEntityRaw(attribute);
 		//widget5.text = &quot;Parent entity reference: &quot; + entity.name;
-
-		/**
-		 * Parents this entity to another entity.
-		 * @method entity.placeable.SetParent
-		 * @param entity {Object} Parenting refers to this entity (Void-entity)
-		 * @param preserveWorldTransform=false {Boolean} When false, the transform attribute of this placeable is treated as the new local
-		 */			
 		slaveClient.placeable.SetParent(entity, preserveWorldTransform=false);
-	}, 
+	},
 
 	/**
 	 * Change fov value.
 	 * @method ChangeFov
-	 * @param fov {Number} 
-	 */
+	 * @param fov {Number}
+	*/
 	ChangeFov: function(fov)
 	{
 		slaveCamera.verticalFov = fov;
 		//widget5.text = &quot;Field of vision: &quot;+fov;
 	},
-	
+
 	/**
 	 * Set new x coordinate point of InfoWidget if window size resized.
 	 * @method windowResized
 	 * @param rect {QRectF}
-	 */
+	*/
 	windowResized: function(rect)
 	{
 		infoWidgetProxy.x = rect.width()-mainWidget.width-10;
-	},	
-	
+	},
+
 	/**
-	 * Create SlaveClient-entity which handles SlaveClient components
+	 * Create SlaveClient-entity which handles SlaveClient components.
 	 * @method createSlaveClient
-	 */
+	*/
 	createSlaveClient: function()
 	{
-		/**
-		 * Create local entity with listed components.
-		 * @method scene.CreateLocalEntity
-		 * @param components {Array} Array of components
-		 */	
 		slaveClient = scene.CreateLocalEntity([&quot;EC_Placeable&quot;, &quot;EC_Camera&quot;, &quot;EC_Name&quot;]);
-
-		/**
-		 * Set entity&#x27;s name.
-		 * @method entity.SetName
-		 * @param param {String}
-		 */			
 		slaveClient.SetName(&quot;SlaveCamera&quot;);
-
-		/**
-		 * Sets entity&#x27;s temporary value to true
-		 * @method entity.SetTemporary
-		 * @param param {Boolean}
-		 */		
 		slaveClient.SetTemporary(true);
-		
+
 		// set parenting reference to the Server&#x27;s Void-entity
 		slaveClient.placeable.SetParent(voidEntity, preserveWorldTransform=false);
-		
+
 		Log(&quot;**** SlaveClient entity has been created with placeable, camera and name components&quot;);
 	},
-	
+
 	/**
 	 * Set SlaveCamera parameters. SlaveCamera is responsible for showing proper viewport of SlaveClient.
 	 * @method setSlaveCamera
-	 */
+	*/
 	setSlaveCamera: function()
 	{
-		/**
-		 * Gets camera component of entity.
-		 * @method entity.camera
-		 * @return {Object} Camera object
-		 */	
 		slaveCamera = slaveClient.camera;
-		
 		slaveTransform = slaveClient.placeable.transform;
-		
-		/**
-		 * @attribute camera.verticalFov
-		 * @type Number
-		 */		
 		slaveCamera.verticalFov = fov;
-		
+
 		widget1.text = &quot;Client&quot; + client_ID + &quot; (SlaveClient)&quot;;
-		
+
 		// Rotate camera by ID * 60 degrees (when rotated to clockwise, negative y-axis value is needed)
 		slaveTransform.rot.y = -(client_ID-1) * 60;
 		slaveClient.placeable.transform = slaveTransform;
-
-		/**
-		 * Activates camera component.
-		 * @method camera.SetActive
-		 */		
 		slaveCamera.SetActive();
-		
+
 		Log(&quot;**** SlaveCamera has been set and rotated by &quot; + (client_ID-1)*60 + &quot; degrees clockwise&quot;);
-		
+
 	},
-	
-	
+
 	/**
-	 * Create 3D Arrow entity.
+	 * Creaty.e 3D Arrow entit
 	 * @method create3DArrow
-	 */
+	*/
 	create3DArrow: function()
 	{
-		/**
-		 * Create local entity with listed components.
-		 * @method scene.CreateLocalEntity
-		 * @param components {Array} Array of components
-		 */	
 		arrow3D = scene.CreateLocalEntity([&quot;EC_Placeable&quot;, &quot;EC_Mesh&quot;, &quot;EC_Name&quot;]);
-		
-		/**
-		 * Set entity&#x27;s name.
-		 * @method entity.SetName
-		 * @param param {String}
-		 */			
 		arrow3D.SetName(&quot;Arrow&quot;);
-		/**
-		 * Set mesh reference of entity.
-		 * @method entity.mesh.meshRef
-		 * @param param {String} Mesh file name and path
-		 */			
 		arrow3D.mesh.meshRef = &quot;assets/Arrow.mesh&quot;;
-
-		/**
-		 * Set mesh material of entity.
-		 * @method entity.mesh.meshMaterial
-		 * @param param {String} Mesh material file name and path
-		 */			
 		var mats = arrow3D.mesh.meshMaterial;
 		mats[0] = &quot;assets/Metal.material&quot;;
 		arrow3D.mesh.meshMaterial = mats;
-
-		/**
-		 * Parents this entity to another entity.
-		 * @method entity.placeable.SetParent
-		 * @param entity {Object} Parenting refers to this entity (Void-entity)
-		 * @param preserveWorldTransform=false {Boolean} When false, the transform attribute of this placeable is treated as the new local
-		 */			
 		arrow3D.placeable.SetParent(voidEntity, preserveWorldTransform=false);
-		
-		/**
-		 * Set transformation of entity.
-		 * @method entity.placeable.transform
-		 */			
 		arrow3DTransform = arrow3D.placeable.transform;
 		arrow3DTransform.pos = DEFAULT_A3D_POS;
 		arrow3DTransform.rot = DEFAULT_A3D_ROT;
 		arrow3DTransform.scale = DEFAULT_A3D_SA;
-		arrow3D.placeable.transform = arrow3DTransform; // set transformation	
-	},	
-	
+		arrow3D.placeable.transform = arrow3DTransform; // set transformation
+	},
+
 	/**
-	 * Remove FreeLookCamera from the scene
+	 * Remove FreeLookCamera from the scene.
 	 * @method removeFreeLookCamera
-	 */
+	*/
 	removeFreeLookCamera: function()
 	{
 		var freelookcamera = scene.GetEntityByName(&quot;FreeLookCamera&quot;);
+
 		if (freelookcamera)
 		{
 			scene.RemoveEntity(freelookcamera.id,&#x27;&#x27;);
 			Log(&quot;**** FreeLookCamera entity removed&quot;);
 		}
 	},
-	
+
 	/**
 	 * Shows status messages in widget5
 	 * @method UpdateStatus
-	 * @param text {String} 
-	 */
+	 * @param text {String}
+	*/
 	UpdateStatus: function(text)
 	{
 		widget5.text = text;
-	},
+	}
+
 });
 
 // Startup
